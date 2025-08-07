@@ -1,0 +1,10 @@
+.vs
+
+go/.idea
+go/*.dll
+go/*.so
+go/*.dylib
+go/*.h
+
+Qt/*.user
+Qt/build
