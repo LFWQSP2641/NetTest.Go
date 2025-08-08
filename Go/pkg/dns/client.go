@@ -39,14 +39,7 @@ func DnsRequestOverSocks5(proxy, server, qname, qtype, qclass string) string {
 
 	data, err := m1.Pack()
 	if err != nil {
-		data := map[string]interface{}{
-			"error": err.Error(),
-		}
-		jsonData, err := json.Marshal(data)
-		if err != nil {
-			return ""
-		}
-		return string(jsonData)
+		return getErrJsonResultString(err)
 	}
 
 	dnsServer := server
@@ -164,8 +157,8 @@ func buildDnsMassage(qname, qtype, qclass string) *dns.Msg {
 
 func getErrJsonResultString(err error) string {
 	data := map[string]interface{}{
-		"code":  -1,
-		"error": err.Error(),
+		"code":    -1,
+		"message": err.Error(),
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
