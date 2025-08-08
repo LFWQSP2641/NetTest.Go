@@ -8,6 +8,7 @@ go/*.h
 
 Qt/*.user
 Qt/build
+Qt/lib
 
 cs/*/bin
 cs/*/obj
