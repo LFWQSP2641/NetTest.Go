@@ -242,9 +242,7 @@ void DnsQueryTask::freeCString(const char *str)
 
 QJsonObject DnsQueryTask::handleDnsResponse(const QByteArray &response)
 {
-    qDebug() << response;
     QJsonObject jsonResponse = QJsonDocument::fromJson(response).object();
-    qDebug() << jsonResponse;
     if (jsonResponse.isEmpty())
     {
         jsonResponse = QJsonObject {

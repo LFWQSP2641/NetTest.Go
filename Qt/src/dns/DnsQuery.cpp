@@ -35,9 +35,14 @@ void DnsQuery::startQuery()
     auto t_socks5Server = m_socks5Server.trimmed();
 
     int colonIndex = t_server.lastIndexOf(':');
+    QString defaultPort = ":53";
+    if (t_server.startsWith(QStringLiteral("tls://")))
+    {
+        defaultPort = ":853";
+    }
     if (colonIndex == -1)
     {
-        t_server += ":53";
+        t_server += defaultPort;
     }
     else
     {
@@ -45,7 +50,7 @@ void DnsQuery::startQuery()
         int port = QStringView {t_server}.mid(colonIndex + 1).toInt(&isNumber);
         if (!isNumber || port < 1 || port > 65535)
         {
-            t_server = t_server.left(colonIndex) + ":53";
+            t_server += defaultPort;
         }
     }
     if (t_type.isEmpty())
@@ -69,19 +74,16 @@ void DnsQuery::startQuery()
 
 void DnsQuery::handleQueryFinished(const QString &hostname, const QJsonObject &result)
 {
-    qDebug() << "DNS query finished for hostname:" << QJsonValue(hostname)
-             << "with result:" << result;
-
     m_busy = false;
     emit busyChanged();
-    emit queryFinished(hostname, result);
+    emit queryFinished(hostname, QJsonDocument(result).toJson());
 }
 
 void DnsQuery::handleQueryFailed(const QString &hostname, const QJsonObject &error)
 {
     m_busy = false;
     emit busyChanged();
-    emit queryFailed(hostname, error);
+    emit queryFailed(hostname, QJsonDocument(error).toJson());
 }
 
 QString DnsQuery::server() const

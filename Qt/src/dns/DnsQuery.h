@@ -31,8 +31,8 @@ signals:
     void startWorkerDnsRequestQuery(const QString &server, const QString &domain, const QString &type, const QString &classType);
     void startWorkerDnsRequestOverSocks5Query(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType);
     void busyChanged();
-    void queryFinished(const QString &hostname, const QJsonObject &result);
-    void queryFailed(const QString &hostname, const QJsonObject &error);
+    void queryFinished(const QString &hostname, const QString &result);
+    void queryFailed(const QString &hostname, const QString &error);
 
 private slots:
     void handleQueryFinished(const QString &hostname, const QJsonObject &result);

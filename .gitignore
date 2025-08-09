@@ -5,6 +5,7 @@ go/*.dll
 go/*.so
 go/*.dylib
 go/*.h
+go/build
 
 Qt/*.user
 Qt/build
