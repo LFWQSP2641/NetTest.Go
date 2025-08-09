@@ -1,12 +1,24 @@
 #!/bin/bash
 
 cd "go"
+MODE="release"
+if [ "$1" = "debug" ]; then
+    MODE="debug"
+fi
 case "$(uname -s)" in
     MINGW*|CYGWIN*|MSYS*)
-        go build -buildmode=c-shared -o ./build/netcore.dll .
+        if [ "$MODE" = "release" ]; then
+            go build -buildmode=c-shared -ldflags "-s -w" -o ./build/netcore.dll .
+        else
+            go build -buildmode=c-shared -o ./build/netcore.dll .
+        fi
         ;;
     *)
-        go build -buildmode=c-shared -o ./build/netcore.so .
+        if [ "$MODE" = "release" ]; then
+            go build -buildmode=c-shared -ldflags "-s -w" -o ./build/netcore.so .
+        else
+            go build -buildmode=c-shared -o ./build/netcore.so .
+        fi
         ;;
 esac
 
