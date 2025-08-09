@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd "go"
+cd "Go"
 MODE="release"
 if [ "$1" = "debug" ]; then
     MODE="debug"
@@ -8,7 +8,7 @@ fi
 case "$(uname -s)" in
     Linux*)     HOST_TAG=linux-x86_64;;
     Darwin*)    HOST_TAG=darwin-x86_64;;
-    MINGW*|CYGWIN*) HOST_TAG=windows-x86_64;;
+    *MINGW*|*CYGWIN*|*MSYS*) HOST_TAG=windows-x86_64;;
     *)          echo "Unsupported system"; exit 1;;
 esac
 if [ -n "${ANDROID_NDK_HOME}" ]; then
@@ -58,7 +58,8 @@ fi
 
 # copy
 cd ..
-cp go/build/libandroidnetcore_arm64-v8a.so qt/lib/
-cp go/build/libandroidnetcore_armeabi-v7a.so qt/lib/
-cp go/build/libandroidnetcore_x86.so qt/lib/
-cp go/build/libandroidnetcore_x86_64.so qt/lib/
+mkdir -p Qt/lib
+cp Go/build/libandroidnetcore_arm64-v8a.so Qt/lib/
+cp Go/build/libandroidnetcore_armeabi-v7a.so Qt/lib/
+cp Go/build/libandroidnetcore_x86.so Qt/lib/
+cp Go/build/libandroidnetcore_x86_64.so Qt/lib/

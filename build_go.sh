@@ -1,12 +1,13 @@
 #!/bin/bash
 
-cd "go"
+cd "Go"
 MODE="release"
 if [ "$1" = "debug" ]; then
     MODE="debug"
 fi
+echo $(uname -s)
 case "$(uname -s)" in
-    MINGW*|CYGWIN*|MSYS*)
+    *MINGW*|*CYGWIN*|*MSYS*)
         if [ "$MODE" = "release" ]; then
             go build -buildmode=c-shared -ldflags "-s -w" -o ./build/netcore.dll .
         else
@@ -24,11 +25,12 @@ esac
 
 # copy
 cd ..
+mkdir -p Qt/lib
 case "$(uname -s)" in
-    MINGW*|CYGWIN*|MSYS*)
-        cp go/build/netcore.dll qt/lib/
+    *MINGW*|*CYGWIN*|*MSYS*)
+        cp Go/build/netcore.dll Qt/lib/
         ;;
     *)
-        cp go/build/netcore.so qt/lib/
+        cp Go/build/netcore.so Qt/lib/
         ;;
 esac

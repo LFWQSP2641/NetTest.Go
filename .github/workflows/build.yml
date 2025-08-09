@@ -45,27 +45,30 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.24.5'
+        go-version: '1.24.6'
       
     - name: Build Go libraries
+      shell: bash
       run: |
         chmod +x ./build_go.sh
         ./build_go.sh
 
     - name: Configure CMake
       run: |
-        cmake -B ${{github.workspace}}/build -S . -G "${{ matrix.cmake_generator }}" -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DEXECUTABLE_OUTPUT_PATH=${{github.workspace}}/build/bin
-        
+        cd Qt
+        cmake -B ${{github.workspace}}/Qt/build -S . -G "${{ matrix.cmake_generator }}" -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=${{github.workspace}}/Qt/build/bin
+
     - name: Build
       run: |
-        cmake --build ${{github.workspace}}/build --config ${{ env.BUILD_TYPE }} --parallel
+        cd Qt
+        cmake --build ${{github.workspace}}/Qt/build --config ${{ env.BUILD_TYPE }} --parallel
 
     - name: Package (Windows Only)
       if: matrix.os == 'windows-latest'
       run: |
         mkdir -p release_package
-        cp build/Release/appNetTest.exe release_package/
-        cp build/Release/netcore.dll release_package/
+        cp Qt/build/bin/Release/appNetTest.exe release_package/
+        cp Qt/build/bin/Release/netcore.dll release_package/
         windeployqt --qmldir . release_package/appNetTest.exe
       shell: bash
 
@@ -80,7 +83,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: appNetTest.exe
-        path: build/Release/appNetTest.exe
+        path: Qt/build/bin/Release/appNetTest.exe
         compression-level: 0
 
     - name: Upload build artifacts (Windows)
@@ -97,13 +100,13 @@ jobs:
       with:
         files: |
           ${{github.workspace}}/NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
-          ${{github.workspace}}/build/Release/appNetTest.exe
+          ${{github.workspace}}/Qt/build/bin/Release/appNetTest.exe
         generate_release_notes: true
 
     - name: Compress (Linux/macOS)
       if: matrix.os != 'windows-latest'
       run: |
-        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z build/bin
+        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z Qt/build/bin
 
     - name: Upload build artifacts (Linux/macOS)
       if: matrix.os != 'windows-latest'
