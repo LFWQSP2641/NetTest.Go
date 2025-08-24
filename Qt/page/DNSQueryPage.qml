@@ -25,7 +25,7 @@ Item {
             ComboBox {
                 id: netTypeComboBox
                 Layout.fillWidth: true
-                model: ["udp://", "tcp://", "tls://"]
+                model: ["udp://", "tcp://", "tls://", "https://"]
                 currentIndex: 0
             }
             TextField {

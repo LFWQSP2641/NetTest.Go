@@ -40,6 +40,10 @@ void DnsQuery::startQuery()
     {
         defaultPort = ":853";
     }
+    else if (t_server.startsWith(QStringLiteral("https://")))
+    {
+        defaultPort = {};
+    }
     if (colonIndex == -1)
     {
         t_server += defaultPort;
@@ -51,6 +55,14 @@ void DnsQuery::startQuery()
         if (!isNumber || port < 1 || port > 65535)
         {
             t_server += defaultPort;
+        }
+    }
+    if (t_server.startsWith(QStringLiteral("https://")))
+    {
+        // add path if not present
+        if (t_server.indexOf('/', 8) == -1)
+        {
+            t_server += "/dns-query";
         }
     }
     if (t_type.isEmpty())
