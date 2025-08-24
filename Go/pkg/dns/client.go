@@ -1,149 +1,49 @@
 package dns
 
 import (
-	"crypto/tls"
 	"encoding/json"
-	"strings"
+	"errors"
 	"time"
 
+	utils "nettest/pkg/utils"
+
 	"github.com/miekg/dns"
-	"github.com/txthinking/socks5"
 )
 
 func DnsRequest(server, qname, qtype, qclass string) string {
-	m1 := buildDnsMassage(qname, qtype, qclass)
-
-	dnsServer := server
-	net := "udp"
-	if strings.HasPrefix(dnsServer, "tcp://") {
-		net = "tcp"
-		dnsServer = strings.TrimPrefix(dnsServer, "tcp://")
-	} else if strings.HasPrefix(dnsServer, "tls://") {
-		net = "tcp-tls"
-		dnsServer = strings.TrimPrefix(dnsServer, "tls://")
+	// Thin facade over resolver.Request
+	netScheme := GetNetScheme(server)
+	req := &DnsRequestType{
+		id:     "",
+		server: server,
+		net:    netScheme,
+		qname:  qname,
+		qtype:  qtype,
+		qclass: qclass,
 	}
-	dnsServer = strings.TrimPrefix(dnsServer, "udp://")
-
-	c := new(dns.Client)
-	c.Net = net // Use UDP by default, can be changed to "tcp" if needed
-	in, rtt, err := c.Exchange(m1, dnsServer)
+	res, err := req.Request()
 	if err != nil {
-		return getErrJsonResultString(err)
+		return utils.BuildErrJSON(err)
 	}
-
-	return getMassageResultString(in, rtt)
+	return getMassageResultString(res.answer, res.rtt)
 }
 
 func DnsRequestOverSocks5(proxy, server, qname, qtype, qclass string) string {
-	m1 := buildDnsMassage(qname, qtype, qclass)
-
-	data, err := m1.Pack()
+	netScheme := GetNetScheme(server)
+	req := &DnsRequestType{
+		id:          "",
+		server:      server,
+		net:         netScheme,
+		socks5Proxy: proxy,
+		qname:       qname,
+		qtype:       qtype,
+		qclass:      qclass,
+	}
+	res, err := req.Request()
 	if err != nil {
-		return getErrJsonResultString(err)
+		return utils.BuildErrJSON(err)
 	}
-
-	dnsServer := server
-	net := "udp"
-	isTCP := false
-	isTLS := false
-	if strings.HasPrefix(dnsServer, "tcp://") {
-		net = "tcp"
-		isTCP = true
-		dnsServer = strings.TrimPrefix(dnsServer, "tcp://")
-	} else if strings.HasPrefix(dnsServer, "tls://") {
-		net = "tcp"
-		isTCP = true
-		isTLS = true
-		dnsServer = strings.TrimPrefix(dnsServer, "tls://")
-	}
-	dnsServer = strings.TrimPrefix(dnsServer, "udp://")
-
-	proxyServer := strings.TrimPrefix(proxy, "socks5://")
-
-	client, err := socks5.NewClient(proxyServer, "", "", 30, 30)
-	if err != nil {
-		return getErrJsonResultString(err)
-	}
-
-	conn, err := client.Dial(net, dnsServer)
-	if err != nil {
-		return getErrJsonResultString(err)
-	}
-	var tlsConn interface {
-		Write([]byte) (int, error)
-		Read([]byte) (int, error)
-		SetDeadline(time.Time) error
-		Close() error
-	} = conn
-	if isTLS {
-		sni := dnsServer
-		if idx := strings.Index(sni, ":"); idx > 0 {
-			sni = sni[:idx]
-		}
-		tlsConfig := &tls.Config{
-			ServerName:         sni,
-			InsecureSkipVerify: false,
-		}
-		tlsConnRaw := tls.Client(conn, tlsConfig)
-		err = tlsConnRaw.Handshake()
-		if err != nil {
-			conn.Close()
-			return getErrJsonResultString(err)
-		}
-		tlsConn = tlsConnRaw
-	}
-	defer tlsConn.Close()
-
-	if err := tlsConn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		return getErrJsonResultString(err)
-	}
-	start := time.Now()
-
-	if isTCP {
-		// DNS over TCP/TLS: 2 bytes length prefix
-		msgLen := uint16(len(data))
-		lenBuf := []byte{byte(msgLen >> 8), byte(msgLen & 0xff)}
-		_, err = tlsConn.Write(lenBuf)
-		if err == nil {
-			_, err = tlsConn.Write(data)
-		}
-		if err != nil {
-			return getErrJsonResultString(err)
-		}
-		// Read 2 bytes length
-		lenBytes := make([]byte, 2)
-		_, err = tlsConn.Read(lenBytes)
-		if err != nil {
-			return getErrJsonResultString(err)
-		}
-		respLen := int(lenBytes[0])<<8 | int(lenBytes[1])
-		resp := make([]byte, respLen)
-		n, err := tlsConn.Read(resp)
-		if err != nil {
-			return getErrJsonResultString(err)
-		}
-		in := &dns.Msg{}
-		if err := in.Unpack(resp[:n]); err != nil {
-			return getErrJsonResultString(err)
-		}
-		return getMassageResultString(in, time.Since(start))
-	} else {
-		// UDP
-		_, err = tlsConn.Write(data)
-		if err != nil {
-			return getErrJsonResultString(err)
-		}
-		response := make([]byte, 1024)
-		n, err := tlsConn.Read(response)
-		if err != nil {
-			return getErrJsonResultString(err)
-		}
-		in := &dns.Msg{}
-		if err := in.Unpack(response[:n]); err != nil {
-			return getErrJsonResultString(err)
-		}
-		return getMassageResultString(in, time.Since(start))
-	}
+	return getMassageResultString(res.answer, res.rtt)
 }
 
 func buildDnsMassage(qname, qtype, qclass string) *dns.Msg {
@@ -155,19 +55,10 @@ func buildDnsMassage(qname, qtype, qclass string) *dns.Msg {
 	return m1
 }
 
-func getErrJsonResultString(err error) string {
-	data := map[string]interface{}{
-		"code":    -1,
-		"message": err.Error(),
-	}
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return ""
-	}
-	return string(jsonData)
-}
-
 func getMassageResultString(m1 *dns.Msg, rtt time.Duration) string {
+	if m1 == nil {
+		return utils.BuildErrJSON(errors.New("nil dns message"))
+	}
 	data := map[string]interface{}{
 		"rtt":    rtt,
 		"answer": make([]map[string]interface{}, len(m1.Answer)),
@@ -209,7 +100,7 @@ func getMassageResultString(m1 *dns.Msg, rtt time.Duration) string {
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return getErrJsonResultString(err)
+		return utils.BuildErrJSON(err)
 	}
 	return string(jsonData)
 }
