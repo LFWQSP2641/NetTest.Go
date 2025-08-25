@@ -42,10 +42,6 @@ func ExchangeTLSWithDialer(ctx context.Context, msg *dns.Msg, server string, d D
 	// tlsConn.Close() will also close underlying conn, but keep a defer just in case of handshake failure before wrapping
 	defer baseConn.Close()
 
-	if deadline, ok := ctx.Deadline(); ok {
-		_ = baseConn.SetDeadline(deadline)
-	}
-
 	// 2) TLS client over the base connection
 	cfg := &tls.Config{
 		ServerName:         to.ServerName,
@@ -56,31 +52,37 @@ func ExchangeTLSWithDialer(ctx context.Context, msg *dns.Msg, server string, d D
 		cfg.NextProtos = to.NextProtos
 	}
 	tlsConn := tls.Client(baseConn, cfg)
-	// Apply deadline to TLS layer as well
-	if deadline, ok := ctx.Deadline(); ok {
-		_ = tlsConn.SetDeadline(deadline)
+	// Per-stage deadlines
+	var handshakeDeadline, writeDeadline, readDeadline time.Time
+	if dl, ok := ctx.Deadline(); ok {
+		handshakeDeadline, writeDeadline, readDeadline = dl, dl, dl
+		_ = tlsConn.SetDeadline(handshakeDeadline)
 	}
 	if err := tlsConn.Handshake(); err != nil {
 		_ = tlsConn.Close()
 		return nil, 0, err
 	}
-	// After handshake, deadlines still apply to the underlying conn
+	// Clear or override deadlines for next stages handled below
+	_ = tlsConn.SetDeadline(time.Time{})
 
 	start := time.Now()
 
-	// 3) Write length-prefixed query
-	var lp [2]byte
-	binary.BigEndian.PutUint16(lp[:], uint16(len(payload)))
-	if err := writeFull(tlsConn, lp[:]); err != nil {
-		_ = tlsConn.Close()
-		return nil, 0, err
+	// 3) Write length-prefixed query in a single frame
+	frame := make([]byte, 2+len(payload))
+	binary.BigEndian.PutUint16(frame[:2], uint16(len(payload)))
+	copy(frame[2:], payload)
+	if !writeDeadline.IsZero() {
+		_ = tlsConn.SetWriteDeadline(writeDeadline)
 	}
-	if err := writeFull(tlsConn, payload); err != nil {
+	if err := writeFull(tlsConn, frame); err != nil {
 		_ = tlsConn.Close()
 		return nil, 0, err
 	}
 
 	// 4) Read length-prefixed response
+	if !readDeadline.IsZero() {
+		_ = tlsConn.SetReadDeadline(readDeadline)
+	}
 	var hp [2]byte
 	if _, err := io.ReadFull(tlsConn, hp[:]); err != nil {
 		_ = tlsConn.Close()

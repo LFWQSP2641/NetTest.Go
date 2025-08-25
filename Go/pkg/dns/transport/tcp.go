@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"net"
 	"time"
 
 	"github.com/miekg/dns"
@@ -38,23 +39,29 @@ func ExchangeTCPWithDialer(ctx context.Context, msg *dns.Msg, server string, d D
 	}
 	defer conn.Close()
 
-	if deadline, ok := ctx.Deadline(); ok {
-		_ = conn.SetDeadline(deadline)
+	// Per-stage deadlines (write then read) to avoid overly broad deadlines
+	var writeDeadline, readDeadline time.Time
+	if dl, ok := ctx.Deadline(); ok {
+		writeDeadline, readDeadline = dl, dl
 	}
 
 	start := time.Now()
 
-	// Write length-prefixed query
-	var lp [2]byte
-	binary.BigEndian.PutUint16(lp[:], uint16(len(payload)))
-	if err := writeFull(conn, lp[:]); err != nil {
-		return nil, 0, err
+	// Build single contiguous buffer: [2-byte len][payload]
+	frame := make([]byte, 2+len(payload))
+	binary.BigEndian.PutUint16(frame[:2], uint16(len(payload)))
+	copy(frame[2:], payload)
+	if !writeDeadline.IsZero() {
+		_ = conn.SetWriteDeadline(writeDeadline)
 	}
-	if err := writeFull(conn, payload); err != nil {
+	if err := writeFull(conn, frame); err != nil {
 		return nil, 0, err
 	}
 
 	// Read length-prefixed response
+	if !readDeadline.IsZero() {
+		_ = conn.SetReadDeadline(readDeadline)
+	}
 	var hp [2]byte
 	if _, err := io.ReadFull(conn, hp[:]); err != nil {
 		return nil, 0, err
@@ -88,8 +95,12 @@ func ExchangeTCP(msg *dns.Msg, server string) (*dns.Msg, time.Duration, error) {
 
 // writeFull writes the entire buffer or returns an error.
 func writeFull(w io.Writer, b []byte) error {
+	// Try Write + Handle short writes
 	for len(b) > 0 {
 		n, err := w.Write(b)
+		if ne, ok := err.(net.Error); ok && ne.Timeout() {
+			return err
+		}
 		if err != nil {
 			return err
 		}
