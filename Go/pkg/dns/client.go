@@ -10,16 +10,18 @@ import (
 	"github.com/miekg/dns"
 )
 
-func DnsRequest(server, qname, qtype, qclass string) string {
-	// Thin facade over resolver.Request
+// DnsRequest adds SNI and EDNS Client Subnet support.
+func DnsRequest(server, qname, qtype, qclass, sni, clientSubnet string) string {
 	netScheme := GetNetScheme(server)
 	req := &DnsRequestType{
-		id:     "",
-		server: server,
-		net:    netScheme,
-		qname:  qname,
-		qtype:  qtype,
-		qclass: qclass,
+		id:           "",
+		server:       server,
+		net:          netScheme,
+		qname:        qname,
+		qtype:        qtype,
+		qclass:       qclass,
+		sni:          sni,
+		clientSubnet: clientSubnet,
 	}
 	res, err := req.Request()
 	if err != nil {
@@ -28,22 +30,51 @@ func DnsRequest(server, qname, qtype, qclass string) string {
 	return getMassageResultString(res.answer, res.rtt)
 }
 
-func DnsRequestOverSocks5(proxy, server, qname, qtype, qclass string) string {
+func DnsRequestOverSocks5(proxy, server, qname, qtype, qclass, sni, clientSubnet string) string {
 	netScheme := GetNetScheme(server)
 	req := &DnsRequestType{
-		id:          "",
-		server:      server,
-		net:         netScheme,
-		socks5Proxy: proxy,
-		qname:       qname,
-		qtype:       qtype,
-		qclass:      qclass,
+		id:           "",
+		server:       server,
+		net:          netScheme,
+		socks5Proxy:  proxy,
+		qname:        qname,
+		qtype:        qtype,
+		qclass:       qclass,
+		sni:          sni,
+		clientSubnet: clientSubnet,
 	}
 	res, err := req.Request()
 	if err != nil {
 		return utils.BuildErrJSON(err)
 	}
 	return getMassageResultString(res.answer, res.rtt)
+}
+
+// DnsRequestJson accepts a JSON string with fields: server, qname, qtype, qclass, optional socks5, sni, client_subnet.
+// Example: {"server":"tls://1.1.1.1:853","qname":"example.com","qtype":"A","qclass":"IN","socks5":"127.0.0.1:1080","sni":"cloudflare-dns.com","client_subnet":"1.2.3.0/24"}
+func DnsRequestJson(jsonStr string) string {
+	var in struct {
+		Server       string `json:"server"`
+		Qname        string `json:"qname"`
+		Qtype        string `json:"qtype"`
+		Qclass       string `json:"qclass"`
+		Socks5       string `json:"socks5"`
+		SNI          string `json:"sni"`
+		ClientSubnet string `json:"client_subnet"`
+	}
+	if err := json.Unmarshal([]byte(jsonStr), &in); err != nil {
+		return utils.BuildErrJSON(err)
+	}
+	if in.Qtype == "" {
+		in.Qtype = "A"
+	}
+	if in.Qclass == "" {
+		in.Qclass = "IN"
+	}
+	if in.Socks5 != "" {
+		return DnsRequestOverSocks5(in.Socks5, in.Server, in.Qname, in.Qtype, in.Qclass, in.SNI, in.ClientSubnet)
+	}
+	return DnsRequest(in.Server, in.Qname, in.Qtype, in.Qclass, in.SNI, in.ClientSubnet)
 }
 
 func buildDnsMassage(qname, qtype, qclass string) *dns.Msg {

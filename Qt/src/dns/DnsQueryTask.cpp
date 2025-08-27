@@ -94,7 +94,7 @@ bool DnsQueryTask::unload()
     return false;
 }
 
-QJsonObject DnsQueryTask::dnsRequest(const QString &server, const QString &domain, const QString &type, const QString &classType)
+QJsonObject DnsQueryTask::dnsRequest(const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni, const QString &clientSubnet)
 {
     const auto err = funcPointerCheck();
     if (err)
@@ -107,7 +107,9 @@ QJsonObject DnsQueryTask::dnsRequest(const QString &server, const QString &domai
     auto result = m_dnsRequest(server.toUtf8().constData(),
                                domain.toUtf8().constData(),
                                type.toUtf8().constData(),
-                               classType.toUtf8().constData());
+                               classType.toUtf8().constData(),
+                               sni.toUtf8().constData(),
+                               clientSubnet.toUtf8().constData());
     if (result)
     {
         const auto jsonResponse = handleDnsResponse(QByteArray(result));
@@ -126,7 +128,7 @@ QJsonObject DnsQueryTask::dnsRequest(const QString &server, const QString &domai
     }
 }
 
-QJsonObject DnsQueryTask::dnsRequestOverSocks5(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType)
+QJsonObject DnsQueryTask::dnsRequestOverSocks5(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni, const QString &clientSubnet)
 {
     const auto err = funcPointerCheck();
     if (err)
@@ -140,7 +142,9 @@ QJsonObject DnsQueryTask::dnsRequestOverSocks5(const QString &socks5Server, cons
                                          server.toUtf8().constData(),
                                          domain.toUtf8().constData(),
                                          type.toUtf8().constData(),
-                                         classType.toUtf8().constData());
+                                         classType.toUtf8().constData(),
+                                         sni.toUtf8().constData(),
+                                         clientSubnet.toUtf8().constData());
     if (result)
     {
         const auto jsonResponse = handleDnsResponse(QByteArray(result));
@@ -159,7 +163,7 @@ QJsonObject DnsQueryTask::dnsRequestOverSocks5(const QString &socks5Server, cons
     }
 }
 
-void DnsQueryTask::dnsRequestAsync(const QString &server, const QString &domain, const QString &type, const QString &classType)
+void DnsQueryTask::dnsRequestAsync(const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni, const QString &clientSubnet)
 {
     const auto err = funcPointerCheck();
     if (err)
@@ -175,11 +179,13 @@ void DnsQueryTask::dnsRequestAsync(const QString &server, const QString &domain,
                       domain.toUtf8().constData(),
                       type.toUtf8().constData(),
                       classType.toUtf8().constData(),
+                      sni.toUtf8().constData(),
+                      clientSubnet.toUtf8().constData(),
                       &DnsQueryTask::dnsCallback,
                       this);
 }
 
-void DnsQueryTask::dnsRequestOverSocks5Async(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType)
+void DnsQueryTask::dnsRequestOverSocks5Async(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni, const QString &clientSubnet)
 {
     const auto err = funcPointerCheck();
     if (err)
@@ -196,6 +202,8 @@ void DnsQueryTask::dnsRequestOverSocks5Async(const QString &socks5Server, const 
                                 domain.toUtf8().constData(),
                                 type.toUtf8().constData(),
                                 classType.toUtf8().constData(),
+                                sni.toUtf8().constData(),
+                                clientSubnet.toUtf8().constData(),
                                 &DnsQueryTask::dnsCallback,
                                 this);
 }

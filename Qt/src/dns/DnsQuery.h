@@ -28,8 +28,8 @@ protected:
     bool m_busy = false;
 
 signals:
-    void startWorkerDnsRequestQuery(const QString &server, const QString &domain, const QString &type, const QString &classType);
-    void startWorkerDnsRequestOverSocks5Query(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType);
+    void startWorkerDnsRequestQuery(const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
+    void startWorkerDnsRequestOverSocks5Query(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
     void busyChanged();
     void queryFinished(const QString &hostname, const QString &result);
     void queryFailed(const QString &hostname, const QString &error);
