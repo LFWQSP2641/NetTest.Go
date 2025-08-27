@@ -2,8 +2,8 @@ package main
 
 /*
 #include <stdint.h>
-typedef void (*DnsCallback)(void*, char*);
-static void callDnsCallback(DnsCallback cb, void* userData, char* result) {
+typedef void (*DnsCallback)(void*, const char*);
+static void callDnsCallback(DnsCallback cb, void* userData, const char* result) {
     cb(userData, result);
 }
 */
@@ -58,7 +58,6 @@ func DnsRequestAsync(server, qname, qtype, qclass, sni, clientSubnet *C.char, cb
 		result := dns.DnsRequest(goServer, goQname, goQtype, goQclass, goSNI, goClientSubnet)
 		cResult := C.CString(result)
 		C.callDnsCallback(cb, userData, cResult)
-		utils.FreeCString(unsafe.Pointer(cResult))
 	}()
 }
 
@@ -75,7 +74,6 @@ func DnsRequestOverSocks5Async(proxy, server, qname, qtype, qclass, sni, clientS
 		result := dns.DnsRequestOverSocks5(goProxy, goServer, goQname, goQtype, goQclass, goSNI, goClientSubnet)
 		cResult := C.CString(result)
 		C.callDnsCallback(cb, userData, cResult)
-		utils.FreeCString(unsafe.Pointer(cResult))
 	}()
 }
 

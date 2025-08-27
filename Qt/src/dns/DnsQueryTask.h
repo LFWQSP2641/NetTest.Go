@@ -41,7 +41,7 @@ protected:
     typedef void (*FreeCString)(const char *);
     FreeCString m_freeCString;
 
-    typedef void (*DnsCallback)(void *, char *);
+    typedef void (*DnsCallback)(void *, const char *);
     typedef const char *(*DnsRequestAsync)(const char *server,
                                            const char *qname,
                                            const char *qtype,
@@ -62,7 +62,7 @@ protected:
                                                      void *);
     DnsRequestOverSocks5Async m_dnsRequestOverSocks5Async;
 
-    static void dnsCallback(void *context, char *response);
+    static void dnsCallback(void *context, const char *response);
 
 protected slots:
     void freeCString(const char *str);

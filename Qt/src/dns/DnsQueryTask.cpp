@@ -213,7 +213,7 @@ bool DnsQueryTask::isLoaded() const
     return m_loaded;
 }
 
-void DnsQueryTask::dnsCallback(void *context, char *response)
+void DnsQueryTask::dnsCallback(void *context, const char *response)
 {
     if (!context || !response)
     {
@@ -223,14 +223,16 @@ void DnsQueryTask::dnsCallback(void *context, char *response)
 
     DnsQueryTask *task = static_cast<DnsQueryTask *>(context);
 
-    QJsonObject jsonResponse = task->handleDnsResponse(QByteArray(response));
+    QByteArray responseData(response);
+    task->freeCString(response);
+    QJsonObject jsonResponse = task->handleDnsResponse(responseData);
     if (jsonResponse.contains("code") && jsonResponse["code"].toInt() < 0)
     {
-        emit task->queryFailed(QString::fromUtf8(response), jsonResponse);
+        emit task->queryFailed(responseData, jsonResponse);
     }
     else
     {
-        emit task->queryFinished(QString::fromUtf8(response), jsonResponse);
+        emit task->queryFinished(responseData, jsonResponse);
     }
 }
 
