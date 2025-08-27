@@ -49,58 +49,91 @@ Item {
             text: "www.google.com"
         }
 
-        RowLayout {
-            ComboBox {
-                id: typeComboBox
-                Layout.minimumWidth: typeComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
-                textRole: "text"
-                valueRole: "enumValue"
-                model: ListModel {
-                    ListElement { text: "A"; enumValue: "A" }
-                    ListElement { text: "AAAA"; enumValue: "AAAA" }
-                    ListElement { text: "NS"; enumValue: "NS" }
-                    ListElement { text: "CNAME"; enumValue: "CNAME" }
-                    ListElement { text: "SOA"; enumValue: "SOA" }
-                    ListElement { text: "PTR"; enumValue: "PTR" }
-                    ListElement { text: "MX"; enumValue: "MX" }
-                    ListElement { text: "TXT"; enumValue: "TXT" }
-                    ListElement { text: "SPF"; enumValue: "SPF" }
-                }
-                currentIndex: 0
-                TextMetrics {
-                    id: typeComboBoxTextMetrics
-                    font: typeComboBox.font
-                    text: typeComboBox.currentText
-                }
-            }
+        Text {
+            Layout.fillWidth: true
+            text: advancedOptions.visible ? qsTr("Advanced Options ▼") : qsTr("Advanced Options ▶")
 
-            ComboBox {
-                id: classComboBox
-                Layout.minimumWidth: classComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
-                textRole: "text"
-                valueRole: "enumValue"
-                model: ListModel {
-                    ListElement { text: "IN"; enumValue: "IN" }
-                    ListElement { text: "CS"; enumValue: "CS" }
-                    ListElement { text: "CH"; enumValue: "CH" }
-                    ListElement { text: "HS"; enumValue: "HS" }
-                    ListElement { text: "NONE"; enumValue: "NONE" }
-                    ListElement { text: "ANY"; enumValue: "ANY" }
-                }
-                currentIndex: 0
-                TextMetrics {
-                    id: classComboBoxTextMetrics
-                    font: classComboBox.font
-                    text: classComboBox.currentText
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    advancedOptions.visible = !advancedOptions.visible;
                 }
             }
         }
 
-        TextField {
-            id: proxyTextField
+        ColumnLayout {
+            id: advancedOptions
             Layout.fillWidth: true
-            placeholderText: qsTr("socks5 Proxy (optional)")
-            text: ""
+            visible: false
+            spacing: 10
+            RowLayout {
+                ComboBox {
+                    id: typeComboBox
+                    Layout.minimumWidth: typeComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
+                    textRole: "text"
+                    valueRole: "enumValue"
+                    model: ListModel {
+                        ListElement { text: "A"; enumValue: "A" }
+                        ListElement { text: "AAAA"; enumValue: "AAAA" }
+                        ListElement { text: "NS"; enumValue: "NS" }
+                        ListElement { text: "CNAME"; enumValue: "CNAME" }
+                        ListElement { text: "SOA"; enumValue: "SOA" }
+                        ListElement { text: "PTR"; enumValue: "PTR" }
+                        ListElement { text: "MX"; enumValue: "MX" }
+                        ListElement { text: "TXT"; enumValue: "TXT" }
+                        ListElement { text: "SPF"; enumValue: "SPF" }
+                    }
+                    currentIndex: 0
+                    TextMetrics {
+                        id: typeComboBoxTextMetrics
+                        font: typeComboBox.font
+                        text: typeComboBox.currentText
+                    }
+                }
+
+                ComboBox {
+                    id: classComboBox
+                    Layout.minimumWidth: classComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
+                    textRole: "text"
+                    valueRole: "enumValue"
+                    model: ListModel {
+                        ListElement { text: "IN"; enumValue: "IN" }
+                        ListElement { text: "CS"; enumValue: "CS" }
+                        ListElement { text: "CH"; enumValue: "CH" }
+                        ListElement { text: "HS"; enumValue: "HS" }
+                        ListElement { text: "NONE"; enumValue: "NONE" }
+                        ListElement { text: "ANY"; enumValue: "ANY" }
+                    }
+                    currentIndex: 0
+                    TextMetrics {
+                        id: classComboBoxTextMetrics
+                        font: classComboBox.font
+                        text: classComboBox.currentText
+                    }
+                }
+            }
+
+            TextField {
+                id: proxyTextField
+                Layout.fillWidth: true
+                placeholderText: qsTr("socks5 Proxy (optional)")
+                text: ""
+            }
+
+            TextField {
+                id: sniTextField
+                Layout.fillWidth: true
+                placeholderText: qsTr("TLS SNI (optional)")
+                text: ""
+            }
+
+            TextField {
+                id: clientSubnetTextField
+                Layout.fillWidth: true
+                placeholderText: qsTr("EDNS Client Subnet (optional)")
+                text: ""
+            }
         }
 
         Button {
@@ -114,10 +147,11 @@ Item {
                 dnsQuery.type = typeComboBox.currentValue;
                 dnsQuery.classType = classComboBox.currentValue;
                 dnsQuery.socks5Server = proxyTextField.text;
+                dnsQuery.sni = sniTextField.text;
+                dnsQuery.clientSubnet = clientSubnetTextField.text;
                 dnsQuery.startQuery();
             }
         }
-
 
         Flickable {
             id: flickable

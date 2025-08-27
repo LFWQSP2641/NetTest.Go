@@ -25,11 +25,14 @@ protected:
     QString m_type;
     QString m_classType;
     QString m_socks5Server;
+    QString m_sni;
+    QString m_clientSubnet;
     bool m_busy = false;
 
 signals:
-    void startWorkerDnsRequestQuery(const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
-    void startWorkerDnsRequestOverSocks5Query(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
+    void startWorkerDnsRequestQuery(const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni, const QString &clientSubnet);
+    void startWorkerDnsRequestOverSocks5Query(
+        const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni, const QString &clientSubnet);
     void busyChanged();
     void queryFinished(const QString &hostname, const QString &result);
     void queryFailed(const QString &hostname, const QString &error);
@@ -54,6 +57,12 @@ public:
     QString socks5Server() const;
     void setSocks5Server(const QString &newSocks5Server);
 
+    QString sni() const;
+    void setSni(const QString &newSni);
+
+    QString clientSubnet() const;
+    void setClientSubnet(const QString &newClientSubnet);
+
     bool busy() const;
 
 signals:
@@ -62,6 +71,8 @@ signals:
     void typeChanged();
     void classTypeChanged();
     void socks5ServerChanged();
+    void sniChanged();
+    void clientSubnetChanged();
 
 private:
     Q_PROPERTY(QString server READ server WRITE setServer NOTIFY serverChanged FINAL)
@@ -69,5 +80,7 @@ private:
     Q_PROPERTY(QString type READ type WRITE setType NOTIFY typeChanged FINAL)
     Q_PROPERTY(QString classType READ classType WRITE setClassType NOTIFY classTypeChanged FINAL)
     Q_PROPERTY(QString socks5Server READ socks5Server WRITE setSocks5Server NOTIFY socks5ServerChanged FINAL)
+    Q_PROPERTY(QString sni READ sni WRITE setSni NOTIFY sniChanged FINAL)
+    Q_PROPERTY(QString clientSubnet READ clientSubnet WRITE setClientSubnet NOTIFY clientSubnetChanged FINAL)
     Q_PROPERTY(bool busy READ busy CONSTANT FINAL)
 };

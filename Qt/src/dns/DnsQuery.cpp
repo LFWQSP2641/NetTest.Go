@@ -33,30 +33,42 @@ void DnsQuery::startQuery()
     auto t_type = m_type.trimmed();
     auto t_classType = m_classType.trimmed();
     auto t_socks5Server = m_socks5Server.trimmed();
+    auto t_sni = m_sni.trimmed();
+    auto t_clientSubnet = m_clientSubnet.trimmed();
 
     // Normalize port and path by scheme
-    auto ensurePort = [](QString &url, const QString &defaultPort){
+    auto ensurePort = [](QString &url, const QString &defaultPort)
+    {
         const int colonIndex = url.lastIndexOf(':');
-        if (colonIndex == -1) { url += defaultPort; return; }
+        if (colonIndex == -1)
+        {
+            url += defaultPort;
+            return;
+        }
         bool isNumber = false;
-        const int port = QStringView{url}.mid(colonIndex + 1).toInt(&isNumber);
+        const int port = QStringView {url}.mid(colonIndex + 1).toInt(&isNumber);
         if (!isNumber || port < 1 || port > 65535) url += defaultPort;
     };
 
     if (t_server.startsWith(QStringLiteral("tls://")) ||
         t_server.startsWith(QStringLiteral("quic://")) ||
-        t_server.startsWith(QStringLiteral("doq://"))) {
+        t_server.startsWith(QStringLiteral("doq://")))
+    {
         ensurePort(t_server, QStringLiteral(":853"));
-    } else if (t_server.startsWith(QStringLiteral("https://")) ||
-               t_server.startsWith(QStringLiteral("https3://")) ||
-               t_server.startsWith(QStringLiteral("http3://")) ||
-               t_server.startsWith(QStringLiteral("h3://"))) {
+    }
+    else if (t_server.startsWith(QStringLiteral("https://")) ||
+             t_server.startsWith(QStringLiteral("https3://")) ||
+             t_server.startsWith(QStringLiteral("http3://")) ||
+             t_server.startsWith(QStringLiteral("h3://")))
+    {
         // HTTPS/HTTP3: no port normalization, but ensure path
         const int schemeEnd = t_server.indexOf(QLatin1String("://"));
         const int hostStart = (schemeEnd >= 0) ? schemeEnd + 3 : 0;
         const int slashPos = t_server.indexOf('/', hostStart);
         if (slashPos < 0) t_server += QStringLiteral("/dns-query");
-    } else {
+    }
+    else
+    {
         ensurePort(t_server, QStringLiteral(":53"));
     }
     if (t_type.isEmpty())
@@ -70,11 +82,11 @@ void DnsQuery::startQuery()
 
     if (!t_socks5Server.isEmpty())
     {
-        emit startWorkerDnsRequestOverSocks5Query(t_socks5Server, t_server, t_domain, t_type, t_classType);
+        emit startWorkerDnsRequestOverSocks5Query(t_socks5Server, t_server, t_domain, t_type, t_classType, t_sni, t_clientSubnet);
     }
     else
     {
-        emit startWorkerDnsRequestQuery(t_server, t_domain, t_type, t_classType);
+        emit startWorkerDnsRequestQuery(t_server, t_domain, t_type, t_classType, t_sni, t_clientSubnet);
     }
 }
 
@@ -155,6 +167,32 @@ void DnsQuery::setSocks5Server(const QString &newSocks5Server)
         return;
     m_socks5Server = newSocks5Server;
     emit socks5ServerChanged();
+}
+
+QString DnsQuery::clientSubnet() const
+{
+    return m_clientSubnet;
+}
+
+void DnsQuery::setClientSubnet(const QString &newClientSubnet)
+{
+    if (m_clientSubnet == newClientSubnet)
+        return;
+    m_clientSubnet = newClientSubnet;
+    emit clientSubnetChanged();
+}
+
+QString DnsQuery::sni() const
+{
+    return m_sni;
+}
+
+void DnsQuery::setSni(const QString &newSni)
+{
+    if (m_sni == newSni)
+        return;
+    m_sni = newSni;
+    emit sniChanged();
 }
 
 bool DnsQuery::busy() const
