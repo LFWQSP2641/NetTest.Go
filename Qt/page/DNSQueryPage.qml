@@ -19,14 +19,20 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
+        spacing: 10
 
         RowLayout {
             Layout.fillWidth: true
             ComboBox {
                 id: netTypeComboBox
-                Layout.fillWidth: true
+                Layout.minimumWidth: netTypeComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
                 model: ["udp://", "tcp://", "tls://", "https://", "quic://", "https3://"]
                 currentIndex: 0
+                TextMetrics {
+                    id: netTypeComboBoxTextMetrics
+                    font: netTypeComboBox.font
+                    text: netTypeComboBox.currentText
+                }
             }
             TextField {
                 id: serverTextField
@@ -44,11 +50,9 @@ Item {
         }
 
         RowLayout {
-            Layout.fillWidth: true
-
             ComboBox {
                 id: typeComboBox
-                Layout.fillWidth: true
+                Layout.minimumWidth: typeComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
                 textRole: "text"
                 valueRole: "enumValue"
                 model: ListModel {
@@ -63,11 +67,16 @@ Item {
                     ListElement { text: "SPF"; enumValue: "SPF" }
                 }
                 currentIndex: 0
+                TextMetrics {
+                    id: typeComboBoxTextMetrics
+                    font: typeComboBox.font
+                    text: typeComboBox.currentText
+                }
             }
 
             ComboBox {
                 id: classComboBox
-                Layout.fillWidth: true
+                Layout.minimumWidth: classComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
                 textRole: "text"
                 valueRole: "enumValue"
                 model: ListModel {
@@ -79,6 +88,11 @@ Item {
                     ListElement { text: "ANY"; enumValue: "ANY" }
                 }
                 currentIndex: 0
+                TextMetrics {
+                    id: classComboBoxTextMetrics
+                    font: classComboBox.font
+                    text: classComboBox.currentText
+                }
             }
         }
 
