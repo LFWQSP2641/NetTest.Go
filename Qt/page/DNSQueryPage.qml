@@ -10,10 +10,10 @@ Item {
             queryButton.enabled = !dnsQuery.busy;
         }
         onQueryFailed: function(hostname, error) {
-            resultTextArea.log("Query failed: " + error);
+            resultTextArea.log(qsTr("Query failed:") + "\n" + error);
         }
         onQueryFinished: function(hostname, result) {
-            resultTextArea.log("Query finished: " + result);
+            resultTextArea.log(qsTr("Query finished:") + "\n" + result);
         }
     }
 
@@ -45,7 +45,7 @@ Item {
         TextField {
             id: domainTextField
             Layout.fillWidth: true
-            placeholderText: qsTr("Domain")
+            placeholderText: qsTr("Query Domain")
             text: "www.google.com"
         }
 
@@ -162,7 +162,7 @@ Item {
             TextArea {
                 id: resultTextArea
                 width: parent.width
-                placeholderText: "received message and debug log"
+                placeholderText: qsTr("received message and debug log")
                 readOnly: true
                 wrapMode: TextEdit.Wrap
 

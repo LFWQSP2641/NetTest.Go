@@ -5,9 +5,17 @@ project(NetTest VERSION 0.4.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 LinguistTools)
 
-qt_standard_project_setup(REQUIRES 6.8)
+qt_standard_project_setup(
+    REQUIRES 6.5
+    I18N_TRANSLATED_LANGUAGES zh_CN
+)
+
+qt_add_translations(appNetTest
+    RESOURCE_PREFIX "/"
+    TS_FILE_DIR translations
+)
 
 qt_add_executable(appNetTest
     src/main.cpp
