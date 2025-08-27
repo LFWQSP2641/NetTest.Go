@@ -38,6 +38,7 @@ Item {
                 id: serverTextField
                 Layout.fillWidth: true
                 placeholderText: qsTr("Server")
+                inputMethodHints: Qt.ImhUrlCharactersOnly
                 text: "223.5.5.5"
             }
         }
@@ -46,7 +47,8 @@ Item {
             id: domainTextField
             Layout.fillWidth: true
             placeholderText: qsTr("Query Domain")
-            text: "www.google.com"
+            inputMethodHints: Qt.ImhUrlCharactersOnly
+            text: "www.baidu.com"
         }
 
         Text {
@@ -118,6 +120,7 @@ Item {
                 id: proxyTextField
                 Layout.fillWidth: true
                 placeholderText: qsTr("socks5 Proxy (optional)")
+                inputMethodHints: Qt.ImhUrlCharactersOnly
                 text: ""
             }
 
@@ -125,6 +128,7 @@ Item {
                 id: sniTextField
                 Layout.fillWidth: true
                 placeholderText: qsTr("TLS SNI (optional)")
+                inputMethodHints: Qt.ImhUrlCharactersOnly
                 text: ""
             }
 
@@ -132,6 +136,7 @@ Item {
                 id: clientSubnetTextField
                 Layout.fillWidth: true
                 placeholderText: qsTr("EDNS Client Subnet (optional)")
+                inputMethodHints: Qt.ImhUrlCharactersOnly
                 text: ""
             }
         }
