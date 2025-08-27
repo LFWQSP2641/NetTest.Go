@@ -34,36 +34,30 @@ void DnsQuery::startQuery()
     auto t_classType = m_classType.trimmed();
     auto t_socks5Server = m_socks5Server.trimmed();
 
-    int colonIndex = t_server.lastIndexOf(':');
-    QString defaultPort = ":53";
-    if (t_server.startsWith(QStringLiteral("tls://")))
-    {
-        defaultPort = ":853";
-    }
-    else if (t_server.startsWith(QStringLiteral("https://")))
-    {
-        defaultPort = {};
-    }
-    if (colonIndex == -1)
-    {
-        t_server += defaultPort;
-    }
-    else
-    {
-        bool isNumber;
-        int port = QStringView {t_server}.mid(colonIndex + 1).toInt(&isNumber);
-        if (!isNumber || port < 1 || port > 65535)
-        {
-            t_server += defaultPort;
-        }
-    }
-    if (t_server.startsWith(QStringLiteral("https://")))
-    {
-        // add path if not present
-        if (t_server.indexOf('/', 8) == -1)
-        {
-            t_server += "/dns-query";
-        }
+    // Normalize port and path by scheme
+    auto ensurePort = [](QString &url, const QString &defaultPort){
+        const int colonIndex = url.lastIndexOf(':');
+        if (colonIndex == -1) { url += defaultPort; return; }
+        bool isNumber = false;
+        const int port = QStringView{url}.mid(colonIndex + 1).toInt(&isNumber);
+        if (!isNumber || port < 1 || port > 65535) url += defaultPort;
+    };
+
+    if (t_server.startsWith(QStringLiteral("tls://")) ||
+        t_server.startsWith(QStringLiteral("quic://")) ||
+        t_server.startsWith(QStringLiteral("doq://"))) {
+        ensurePort(t_server, QStringLiteral(":853"));
+    } else if (t_server.startsWith(QStringLiteral("https://")) ||
+               t_server.startsWith(QStringLiteral("https3://")) ||
+               t_server.startsWith(QStringLiteral("http3://")) ||
+               t_server.startsWith(QStringLiteral("h3://"))) {
+        // HTTPS/HTTP3: no port normalization, but ensure path
+        const int schemeEnd = t_server.indexOf(QLatin1String("://"));
+        const int hostStart = (schemeEnd >= 0) ? schemeEnd + 3 : 0;
+        const int slashPos = t_server.indexOf('/', hostStart);
+        if (slashPos < 0) t_server += QStringLiteral("/dns-query");
+    } else {
+        ensurePort(t_server, QStringLiteral(":53"));
     }
     if (t_type.isEmpty())
     {
