@@ -3,6 +3,7 @@ package dns
 import (
 	"context"
 	"errors"
+	"net/netip"
 	"strings"
 	"time"
 
@@ -13,13 +14,15 @@ import (
 )
 
 type DnsRequestType struct {
-	id          string
-	server      string
-	net         string
-	socks5Proxy string
-	qname       string
-	qtype       string
-	qclass      string
+	id           string
+	server       string
+	net          string
+	socks5Proxy  string
+	sni          string
+	clientSubnet string // CIDR, e.g. "1.2.3.0/24" or "2001:db8::/56"
+	qname        string
+	qtype        string
+	qclass       string
 }
 
 type DnsResultType struct {
@@ -102,7 +105,14 @@ func (d *DnsRequestType) Request() (*DnsResultType, error) {
 			pd = v
 		}
 		sd := singdns.NewDialerAdapter(dialer, pd)
-		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr})
+		// Parse client subnet if provided
+		var ecs netip.Prefix
+		if s := strings.TrimSpace(d.clientSubnet); s != "" {
+			if p, perr := netip.ParsePrefix(s); perr == nil {
+				ecs = p
+			}
+		}
+		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr, SNI: d.sni, ClientSubnet: ecs})
 		if e != nil {
 			err = e
 			break
@@ -119,7 +129,13 @@ func (d *DnsRequestType) Request() (*DnsResultType, error) {
 			pd = v
 		}
 		sd := singdns.NewDialerAdapter(dialer, pd)
-		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr})
+		var ecs netip.Prefix
+		if s := strings.TrimSpace(d.clientSubnet); s != "" {
+			if p, perr := netip.ParsePrefix(s); perr == nil {
+				ecs = p
+			}
+		}
+		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr, SNI: d.sni, ClientSubnet: ecs})
 		if e != nil {
 			err = e
 			break
@@ -136,7 +152,13 @@ func (d *DnsRequestType) Request() (*DnsResultType, error) {
 			pd = v
 		}
 		sd := singdns.NewDialerAdapter(dialer, pd)
-		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr})
+		var ecs netip.Prefix
+		if s := strings.TrimSpace(d.clientSubnet); s != "" {
+			if p, perr := netip.ParsePrefix(s); perr == nil {
+				ecs = p
+			}
+		}
+		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr, SNI: d.sni, ClientSubnet: ecs})
 		if e != nil {
 			err = e
 			break
@@ -153,7 +175,13 @@ func (d *DnsRequestType) Request() (*DnsResultType, error) {
 			pd = v
 		}
 		sd := singdns.NewDialerAdapter(dialer, pd)
-		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr})
+		var ecs netip.Prefix
+		if s := strings.TrimSpace(d.clientSubnet); s != "" {
+			if p, perr := netip.ParsePrefix(s); perr == nil {
+				ecs = p
+			}
+		}
+		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr, SNI: d.sni, ClientSubnet: ecs})
 		if e != nil {
 			err = e
 			break
@@ -170,7 +198,13 @@ func (d *DnsRequestType) Request() (*DnsResultType, error) {
 			pd = v
 		}
 		sd := singdns.NewDialerAdapter(dialer, pd)
-		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr})
+		var ecs netip.Prefix
+		if s := strings.TrimSpace(d.clientSubnet); s != "" {
+			if p, perr := netip.ParsePrefix(s); perr == nil {
+				ecs = p
+			}
+		}
+		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr, SNI: d.sni, ClientSubnet: ecs})
 		if e != nil {
 			err = e
 			break
@@ -187,7 +221,13 @@ func (d *DnsRequestType) Request() (*DnsResultType, error) {
 			pd = v
 		}
 		sd := singdns.NewDialerAdapter(dialer, pd)
-		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr})
+		var ecs netip.Prefix
+		if s := strings.TrimSpace(d.clientSubnet); s != "" {
+			if p, perr := netip.ParsePrefix(s); perr == nil {
+				ecs = p
+			}
+		}
+		t, e := singdns.CreateTransport(singdns.TransportOptions{Context: ctx, Dialer: sd, Address: serverAddr, SNI: d.sni, ClientSubnet: ecs})
 		if e != nil {
 			err = e
 			break

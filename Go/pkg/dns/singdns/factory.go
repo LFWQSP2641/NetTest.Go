@@ -4,12 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/netip"
 	"net/url"
 	"strings"
-
-	"nettest/pkg/dns/transport"
 
 	"github.com/miekg/dns"
 	upstreamdns "github.com/sagernet/sing-dns"
@@ -17,10 +14,8 @@ import (
 	N "github.com/sagernet/sing/common/network"
 )
 
-// DomainStrategy is a placeholder for strategy selection; adjust as needed.
 type DomainStrategy int
 
-// Transport is a minimal interface to unify different DNS transports.
 type Transport interface {
 	Name() string
 	Start() error
@@ -39,11 +34,11 @@ type TransportOptions struct {
 	Dialer       N.Dialer
 	Address      string
 	ClientSubnet netip.Prefix
+	SNI          string
 }
 
 var transports map[string]TransportConstructor
 
-// RegisterTransport registers a constructor for given schemes (or full addresses).
 func RegisterTransport(schemes []string, constructor TransportConstructor) {
 	if transports == nil {
 		transports = make(map[string]TransportConstructor)
@@ -53,21 +48,17 @@ func RegisterTransport(schemes []string, constructor TransportConstructor) {
 	}
 }
 
-// CreateTransport locates a constructor by full address key, or by URL scheme.
-// e.g. "udp://1.1.1.1:53" → lookup key "udp"; "https://dns.google/dns-query" → key "https".
 func CreateTransport(options TransportOptions) (Transport, error) {
 	if transports == nil {
 		return nil, errors.New("no transports registered")
 	}
 	constructor := transports[options.Address]
 	if constructor == nil {
-		// Try parse as URL to get scheme
 		if u, err := url.Parse(options.Address); err == nil && u != nil && u.Scheme != "" {
 			constructor = transports[u.Scheme]
 		}
 	}
 	if constructor == nil {
-		// Fallback: simple prefix probe
 		for k := range transports {
 			if len(k) > 0 && len(options.Address) >= len(k)+3 && options.Address[:len(k)+3] == k+"://" {
 				constructor = transports[k]
@@ -78,7 +69,6 @@ func CreateTransport(options TransportOptions) (Transport, error) {
 	if constructor == nil {
 		return nil, fmt.Errorf("unknown DNS server format: %s", options.Address)
 	}
-	// Bind name into context for downstream if needed (no-op here)
 	if options.Context == nil {
 		options.Context = context.Background()
 	}
@@ -92,7 +82,6 @@ func CreateTransport(options TransportOptions) (Transport, error) {
 	return t, nil
 }
 
-// edns0SubnetTransportWrapper injects ECS before calling inner transport.
 type edns0SubnetTransportWrapper struct {
 	inner  Transport
 	subnet netip.Prefix
@@ -106,7 +95,6 @@ func (w *edns0SubnetTransportWrapper) Raw() bool    { return w.inner.Raw() }
 func (w *edns0SubnetTransportWrapper) Lookup(ctx context.Context, d string, s DomainStrategy) ([]netip.Addr, error) {
 	return w.inner.Lookup(ctx, d, s)
 }
-
 func (w *edns0SubnetTransportWrapper) Exchange(ctx context.Context, m *dns.Msg) (*dns.Msg, error) {
 	if m != nil && w.subnet.IsValid() {
 		ensureECS(m, w.subnet)
@@ -117,13 +105,12 @@ func (w *edns0SubnetTransportWrapper) Exchange(ctx context.Context, m *dns.Msg) 
 func ensureECS(m *dns.Msg, p netip.Prefix) {
 	opt := m.IsEdns0()
 	if opt == nil {
-		m.SetEdns0(1232, true) // typical UDP size
+		m.SetEdns0(1232, true)
 		opt = m.IsEdns0()
 	}
 	if opt == nil {
 		return
 	}
-	// Remove existing ECS if any
 	var rest []dns.EDNS0
 	for _, o := range opt.Option {
 		if o.Option() != dns.EDNS0SUBNET {
@@ -131,7 +118,6 @@ func ensureECS(m *dns.Msg, p netip.Prefix) {
 		}
 	}
 	opt.Option = rest
-
 	var family uint16
 	var addr []byte
 	ip := p.Addr()
@@ -152,146 +138,36 @@ func ensureECS(m *dns.Msg, p netip.Prefix) {
 	opt.Option = append(opt.Option, ecs)
 }
 
-// Built-in constructors using our transport layer, keyed by scheme.
 func init() {
-	// UDP
 	RegisterTransport([]string{"udp"}, func(opt TransportOptions) (Transport, error) {
-		return simpleExchangeTransport{
-			name:    "udp",
-			dialer:  opt.Dialer,
-			address: opt.Address,
-			exch: func(ctx context.Context, m *dns.Msg, d N.Dialer, addr string) (*dns.Msg, error) {
-				// Use our PacketDialer if available
-				if da, ok := d.(*dialerAdapter); ok {
-					if pd := da.OurPacketDialer(); pd != nil {
-						r, _, err := transport.ExchangeUDPWithDialer(ctx, m, stripScheme(addr), pd)
-						return r, err
-					}
-				}
-				// QUIC (DoQ) via sing-dns upstream registry
-				RegisterTransport([]string{"quic", "doq"}, func(opt TransportOptions) (Transport, error) {
-					if opt.Dialer == nil {
-						return nil, errors.New("nil dialer for quic")
-					}
-					a := opt.Address
-					if strings.HasPrefix(a, "doq://") {
-						a = "quic://" + a[len("doq://"):]
-					}
-					u, err := upstreamdns.CreateTransport(upstreamdns.TransportOptions{
-						Context: opt.Context,
-						Name:    "quic",
-						Dialer:  opt.Dialer,
-						Address: a,
-					})
-					if err != nil {
-						return nil, err
-					}
-					return singUpstreamTransport{name: "quic", upstream: u}, nil
-				})
-
-				// HTTP/3 (DoH3) via sing-dns upstream registry
-				RegisterTransport([]string{"https3", "http3", "h3"}, func(opt TransportOptions) (Transport, error) {
-					if opt.Dialer == nil {
-						return nil, errors.New("nil dialer for http3")
-					}
-					a := opt.Address
-					if u, err := url.Parse(a); err == nil && u != nil {
-						if u.Scheme == "https3" || u.Scheme == "http3" {
-							u.Scheme = "h3"
-							a = u.String()
-						}
-					}
-					u, err := upstreamdns.CreateTransport(upstreamdns.TransportOptions{
-						Context: opt.Context,
-						Name:    "h3",
-						Dialer:  opt.Dialer,
-						Address: a,
-					})
-					if err != nil {
-						return nil, err
-					}
-					return singUpstreamTransport{name: "https3", upstream: u}, nil
-				})
-				return nil, transport.ErrSocks5UDPUnsupported
-			},
-		}, nil
-	})
-	// TCP
-	RegisterTransport([]string{"tcp"}, func(opt TransportOptions) (Transport, error) {
-		return simpleExchangeTransport{
-			name:    "tcp",
-			dialer:  opt.Dialer,
-			address: opt.Address,
-			exch: func(ctx context.Context, m *dns.Msg, d N.Dialer, addr string) (*dns.Msg, error) {
-				if da, ok := d.(*dialerAdapter); ok {
-					r, _, err := transport.ExchangeTCPWithDialer(ctx, m, stripScheme(addr), da.OurDialer())
-					return r, err
-				}
-				return nil, errors.New("incompatible dialer adapter")
-			},
-		}, nil
-	})
-	// TLS (DoT)
-	RegisterTransport([]string{"tls"}, func(opt TransportOptions) (Transport, error) {
-		return simpleExchangeTransport{
-			name:    "tls",
-			dialer:  opt.Dialer,
-			address: opt.Address,
-			exch: func(ctx context.Context, m *dns.Msg, d N.Dialer, addr string) (*dns.Msg, error) {
-				hostPort := stripScheme(addr)
-				// Derive SNI/insecure from host
-				tlsOpt := transport.TLSOptions{}
-				host := hostOnly(hostPort)
-				if host != "" {
-					if ip := net.ParseIP(host); ip != nil {
-						tlsOpt.InsecureSkipVerify = true
-					} else {
-						tlsOpt.ServerName = host
-					}
-				} else {
-					tlsOpt.InsecureSkipVerify = true
-				}
-				if da, ok := d.(*dialerAdapter); ok {
-					r, _, err := transport.ExchangeTLSWithDialer(ctx, m, hostPort, da.OurDialer(), tlsOpt)
-					return r, err
-				}
-				return nil, errors.New("incompatible dialer adapter")
-			},
-		}, nil
-	})
-	// HTTPS (DoH)
-	RegisterTransport([]string{"https"}, func(opt TransportOptions) (Transport, error) {
-		return simpleExchangeTransport{
-			name:    "https",
-			dialer:  opt.Dialer,
-			address: opt.Address,
-			exch: func(ctx context.Context, m *dns.Msg, d N.Dialer, addr string) (*dns.Msg, error) {
-				if da, ok := d.(*dialerAdapter); ok {
-					// Build TLSOptions: SNI for hostname, insecure for IP
-					tlsOpt := transport.TLSOptions{}
-					if u, err := url.Parse(addr); err == nil && u != nil {
-						host := u.Hostname()
-						if host != "" {
-							if ip := net.ParseIP(host); ip != nil {
-								tlsOpt.InsecureSkipVerify = true
-							} else {
-								tlsOpt.ServerName = host
-							}
-						}
-					}
-					r, _, err := transport.ExchangeHTTPSWithDialer(ctx, m, addr, da.OurDialer(), tlsOpt, transport.DoHOptions{Method: "POST"})
-					return r, err
-				}
-				return nil, errors.New("incompatible dialer adapter")
-			},
-		}, nil
-	})
-
-	// QUIC (DoQ) via sing-dns upstream
-	RegisterTransport([]string{"quic", "doq"}, func(opt TransportOptions) (Transport, error) {
-		if opt.Dialer == nil {
-			return nil, errors.New("nil dialer for quic")
+		u, err := upstreamdns.CreateTransport(upstreamdns.TransportOptions{Context: opt.Context, Name: "udp", Dialer: opt.Dialer, Address: opt.Address})
+		if err != nil {
+			return nil, err
 		}
+		return singUpstreamTransport{name: "udp", upstream: u}, nil
+	})
+	RegisterTransport([]string{"tcp"}, func(opt TransportOptions) (Transport, error) {
+		u, err := upstreamdns.CreateTransport(upstreamdns.TransportOptions{Context: opt.Context, Name: "tcp", Dialer: opt.Dialer, Address: opt.Address})
+		if err != nil {
+			return nil, err
+		}
+		return singUpstreamTransport{name: "tcp", upstream: u}, nil
+	})
+	RegisterTransport([]string{"tls"}, func(opt TransportOptions) (Transport, error) {
+		u, err := upstreamdns.CreateTransport(upstreamdns.TransportOptions{Context: opt.Context, Name: "tls", Dialer: opt.Dialer, Address: opt.Address})
+		if err != nil {
+			return nil, err
+		}
+		return singUpstreamTransport{name: "tls", upstream: u}, nil
+	})
+	RegisterTransport([]string{"https"}, func(opt TransportOptions) (Transport, error) {
+		u, err := upstreamdns.CreateTransport(upstreamdns.TransportOptions{Context: opt.Context, Name: "https", Dialer: opt.Dialer, Address: opt.Address})
+		if err != nil {
+			return nil, err
+		}
+		return singUpstreamTransport{name: "https", upstream: u}, nil
+	})
+	RegisterTransport([]string{"quic", "doq"}, func(opt TransportOptions) (Transport, error) {
 		a := opt.Address
 		if strings.HasPrefix(a, "doq://") {
 			a = "quic://" + a[len("doq://"):]
@@ -302,12 +178,7 @@ func init() {
 		}
 		return singUpstreamTransport{name: "quic", upstream: u}, nil
 	})
-
-	// HTTP/3 (DoH3) via sing-dns upstream
 	RegisterTransport([]string{"https3", "http3", "h3"}, func(opt TransportOptions) (Transport, error) {
-		if opt.Dialer == nil {
-			return nil, errors.New("nil dialer for http3")
-		}
 		a := opt.Address
 		if u, err := url.Parse(a); err == nil && u != nil {
 			if u.Scheme == "https3" || u.Scheme == "http3" {
@@ -323,7 +194,6 @@ func init() {
 	})
 }
 
-// simpleExchangeTransport is a thin wrapper to reuse our transport exchangers.
 type simpleExchangeTransport struct {
 	name    string
 	dialer  N.Dialer
@@ -343,25 +213,8 @@ func (t simpleExchangeTransport) Exchange(ctx context.Context, m *dns.Msg) (*dns
 	return t.exch(ctx, m, t.dialer, t.address)
 }
 
-func stripScheme(addr string) string {
-	// strip known schemes to get host:port
-	for _, s := range []string{"udp://", "tcp://", "tls://"} {
-		if len(addr) > len(s) && addr[:len(s)] == s {
-			return addr[len(s):]
-		}
-	}
-	return addr
-}
+// (no helpers required)
 
-// hostOnly extracts host from host:port or returns input if no colon.
-func hostOnly(hostPort string) string {
-	if i := strings.LastIndex(hostPort, ":"); i > 0 {
-		return hostPort[:i]
-	}
-	return hostPort
-}
-
-// singUpstreamTransport wraps a sing-dns upstream transport to our Transport.
 type singUpstreamTransport struct {
 	name     string
 	upstream interface {

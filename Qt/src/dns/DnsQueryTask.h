@@ -18,27 +18,48 @@ public:
 public slots:
     bool load();
     bool unload();
-    QJsonObject dnsRequest(const QString &server, const QString &domain, const QString &type, const QString &classType);
-    QJsonObject dnsRequestOverSocks5(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType);
+    QJsonObject dnsRequest(const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
+    QJsonObject dnsRequestOverSocks5(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
 
-    void dnsRequestAsync(const QString &server, const QString &domain, const QString &type, const QString &classType);
-    void dnsRequestOverSocks5Async(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType);
+    void dnsRequestAsync(const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
+    void dnsRequestOverSocks5Async(const QString &socks5Server, const QString &server, const QString &domain, const QString &type, const QString &classType, const QString &sni = QString(), const QString &clientSubnet = QString());
 
 protected:
     bool m_loaded = false;
 
     QLibrary *m_dnsLibrary;
-    typedef const char *(*DnsRequest)(const char *, const char *, const char *, const char *);
+    typedef const char *(*DnsRequest)(const char *server, const char *qname, const char *qtype, const char *qclass, const char *sni, const char *clientSubnet);
     DnsRequest m_dnsRequest;
-    typedef const char *(*DnsRequestOverSocks5)(const char *, const char *, const char *, const char *, const char *);
+    typedef const char *(*DnsRequestOverSocks5)(const char *proxy,
+                                                const char *server,
+                                                const char *qname,
+                                                const char *qtype,
+                                                const char *qclass,
+                                                const char *sni,
+                                                const char *clientSubnet);
     DnsRequestOverSocks5 m_dnsRequestOverSocks5;
     typedef void (*FreeCString)(const char *);
     FreeCString m_freeCString;
 
     typedef void (*DnsCallback)(void *, char *);
-    typedef const char *(*DnsRequestAsync)(const char *, const char *, const char *, const char *, DnsCallback, void *);
+    typedef const char *(*DnsRequestAsync)(const char *server,
+                                           const char *qname,
+                                           const char *qtype,
+                                           const char *qclass,
+                                           const char *sni,
+                                           const char *clientSubnet,
+                                           DnsCallback,
+                                           void *);
     DnsRequestAsync m_dnsRequestAsync;
-    typedef const char *(*DnsRequestOverSocks5Async)(const char *, const char *, const char *, const char *, const char *, DnsCallback, void *);
+    typedef const char *(*DnsRequestOverSocks5Async)(const char *proxy,
+                                                     const char *server,
+                                                     const char *qname,
+                                                     const char *qtype,
+                                                     const char *qclass,
+                                                     const char *sni,
+                                                     const char *clientSubnet,
+                                                     DnsCallback,
+                                                     void *);
     DnsRequestOverSocks5Async m_dnsRequestOverSocks5Async;
 
     static void dnsCallback(void *context, char *response);

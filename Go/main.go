@@ -15,34 +15,47 @@ import (
 )
 
 //export DnsRequest
-func DnsRequest(server *C.char, qname *C.char, qtype *C.char, qclass *C.char) *C.char {
+func DnsRequest(server, qname, qtype, qclass, sni, clientSubnet *C.char) *C.char {
 	goServer := C.GoString(server)
 	goQname := C.GoString(qname)
 	goQtype := C.GoString(qtype)
 	goQclass := C.GoString(qclass)
-	result := dns.DnsRequest(goServer, goQname, goQtype, goQclass)
+	goSNI := C.GoString(sni)
+	goClientSubnet := C.GoString(clientSubnet)
+	result := dns.DnsRequest(goServer, goQname, goQtype, goQclass, goSNI, goClientSubnet)
+	return C.CString(result)
+}
+
+//export DnsRequestJson
+func DnsRequestJson(json *C.char) *C.char {
+	goJSON := C.GoString(json)
+	result := dns.DnsRequestJson(goJSON)
 	return C.CString(result)
 }
 
 //export DnsRequestOverSocks5
-func DnsRequestOverSocks5(proxy *C.char, server *C.char, qname *C.char, qtype *C.char, qclass *C.char) *C.char {
+func DnsRequestOverSocks5(proxy, server, qname, qtype, qclass, sni, clientSubnet *C.char) *C.char {
 	goProxy := C.GoString(proxy)
 	goServer := C.GoString(server)
 	goQname := C.GoString(qname)
 	goQtype := C.GoString(qtype)
 	goQclass := C.GoString(qclass)
-	result := dns.DnsRequestOverSocks5(goProxy, goServer, goQname, goQtype, goQclass)
+	goSNI := C.GoString(sni)
+	goClientSubnet := C.GoString(clientSubnet)
+	result := dns.DnsRequestOverSocks5(goProxy, goServer, goQname, goQtype, goQclass, goSNI, goClientSubnet)
 	return C.CString(result)
 }
 
 //export DnsRequestAsync
-func DnsRequestAsync(server, qname, qtype, qclass *C.char, cb C.DnsCallback, userData unsafe.Pointer) {
+func DnsRequestAsync(server, qname, qtype, qclass, sni, clientSubnet *C.char, cb C.DnsCallback, userData unsafe.Pointer) {
 	goServer := C.GoString(server)
 	goQname := C.GoString(qname)
 	goQtype := C.GoString(qtype)
 	goQclass := C.GoString(qclass)
+	goSNI := C.GoString(sni)
+	goClientSubnet := C.GoString(clientSubnet)
 	go func() {
-		result := dns.DnsRequest(goServer, goQname, goQtype, goQclass)
+		result := dns.DnsRequest(goServer, goQname, goQtype, goQclass, goSNI, goClientSubnet)
 		cResult := C.CString(result)
 		C.callDnsCallback(cb, userData, cResult)
 		utils.FreeCString(unsafe.Pointer(cResult))
@@ -50,14 +63,16 @@ func DnsRequestAsync(server, qname, qtype, qclass *C.char, cb C.DnsCallback, use
 }
 
 //export DnsRequestOverSocks5Async
-func DnsRequestOverSocks5Async(proxy, server, qname, qtype, qclass *C.char, cb C.DnsCallback, userData unsafe.Pointer) {
+func DnsRequestOverSocks5Async(proxy, server, qname, qtype, qclass, sni, clientSubnet *C.char, cb C.DnsCallback, userData unsafe.Pointer) {
 	goProxy := C.GoString(proxy)
 	goServer := C.GoString(server)
 	goQname := C.GoString(qname)
 	goQtype := C.GoString(qtype)
 	goQclass := C.GoString(qclass)
+	goSNI := C.GoString(sni)
+	goClientSubnet := C.GoString(clientSubnet)
 	go func() {
-		result := dns.DnsRequestOverSocks5(goProxy, goServer, goQname, goQtype, goQclass)
+		result := dns.DnsRequestOverSocks5(goProxy, goServer, goQname, goQtype, goQclass, goSNI, goClientSubnet)
 		cResult := C.CString(result)
 		C.callDnsCallback(cb, userData, cResult)
 		utils.FreeCString(unsafe.Pointer(cResult))
