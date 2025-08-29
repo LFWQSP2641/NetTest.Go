@@ -34,12 +34,25 @@ Item {
                     text: netTypeComboBox.currentText
                 }
             }
-            TextField {
-                id: serverTextField
+            ComboBox {
+                id: serverComboBox
                 Layout.fillWidth: true
-                placeholderText: qsTr("Server")
+                editable: true
+                model: [
+                    "223.5.5.5",          // 阿里 DNS
+                    "119.29.29.29",       // 腾讯 DNS
+                    "dns.alidns.com",     // 阿里 DNS 域名
+                    "doh.pub",            // 腾讯 DNS 域名
+                    "8.8.8.8",            // Google DNS
+                    "1.1.1.1",            // Cloudflare DNS
+                    "dns.google",         // Google DNS 域名
+                    "cloudflare-dns.com", // Cloudflare DNS 域名
+                    "180.76.76.76",       // 百度 DNS
+                    "114.114.114.114",    // 114 DNS
+                    "1.2.4.8",            // CNNIC DNS
+                ]
+                currentIndex: 0
                 inputMethodHints: Qt.ImhUrlCharactersOnly
-                text: "223.5.5.5"
             }
         }
 
@@ -73,19 +86,8 @@ Item {
                 ComboBox {
                     id: typeComboBox
                     Layout.minimumWidth: typeComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
-                    textRole: "text"
-                    valueRole: "enumValue"
-                    model: ListModel {
-                        ListElement { text: "A"; enumValue: "A" }
-                        ListElement { text: "AAAA"; enumValue: "AAAA" }
-                        ListElement { text: "NS"; enumValue: "NS" }
-                        ListElement { text: "CNAME"; enumValue: "CNAME" }
-                        ListElement { text: "SOA"; enumValue: "SOA" }
-                        ListElement { text: "PTR"; enumValue: "PTR" }
-                        ListElement { text: "MX"; enumValue: "MX" }
-                        ListElement { text: "TXT"; enumValue: "TXT" }
-                        ListElement { text: "SPF"; enumValue: "SPF" }
-                    }
+                    editable: true
+                    model: ["A", "AAAA", "NS", "CNAME", "SOA", "PTR", "MX", "TXT", "SPF", "SRV", "CAA", "ANY", "DNSKEY", "DS", "RRSIG"]
                     currentIndex: 0
                     TextMetrics {
                         id: typeComboBoxTextMetrics
@@ -97,16 +99,8 @@ Item {
                 ComboBox {
                     id: classComboBox
                     Layout.minimumWidth: classComboBoxTextMetrics.width + implicitIndicatorWidth + leftPadding + rightPadding
-                    textRole: "text"
-                    valueRole: "enumValue"
-                    model: ListModel {
-                        ListElement { text: "IN"; enumValue: "IN" }
-                        ListElement { text: "CS"; enumValue: "CS" }
-                        ListElement { text: "CH"; enumValue: "CH" }
-                        ListElement { text: "HS"; enumValue: "HS" }
-                        ListElement { text: "NONE"; enumValue: "NONE" }
-                        ListElement { text: "ANY"; enumValue: "ANY" }
-                    }
+                    editable: true
+                    model: ["IN", "CS", "CH", "HS", "NONE", "ANY"]
                     currentIndex: 0
                     TextMetrics {
                         id: classComboBoxTextMetrics
@@ -147,10 +141,10 @@ Item {
             text: qsTr("Query DNS")
             onClicked: {
                 queryButton.enabled = false;
-                dnsQuery.server = netTypeComboBox.currentText + serverTextField.text;
+                dnsQuery.server = netTypeComboBox.currentText + serverComboBox.currentText;
                 dnsQuery.domain = domainTextField.text;
-                dnsQuery.type = typeComboBox.currentValue;
-                dnsQuery.classType = classComboBox.currentValue;
+                dnsQuery.type = typeComboBox.currentText;
+                dnsQuery.classType = classComboBox.currentText;
                 dnsQuery.socks5Server = proxyTextField.text;
                 dnsQuery.sni = sniTextField.text;
                 dnsQuery.clientSubnet = clientSubnetTextField.text;
