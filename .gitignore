@@ -1,5 +1,5 @@
 .vs
-lib
+/lib
 
 go/.idea
 go/*.dll
