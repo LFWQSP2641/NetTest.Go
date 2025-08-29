@@ -1,5 +1,7 @@
 # NetTest.Go
 
+**仅为我 Golang, ReactiveUI, Avalonia, .NET MAUI, Flutter 的学习和实践项目，不保证代码质量，建议不要视为完整的解决方案学习代码和参考**
+
 NetTest.Go 是一个用于网络测试的工具，旨在帮助开发人员和测试人员快速验证网络服务的可用性和性能。
 
 目前支持 DNS 查询，包括 UDP, TCP, DoT 和 DoH 等协议，同时支持通过 socks5 代理进行测试。
@@ -9,8 +11,9 @@ NetTest.Go 是一个用于网络测试的工具，旨在帮助开发人员和测
 <!-- ![Qt_gui](./docs/pics/Qt_gui.png)
 ![Qt_android_gui](./docs/pics/Qt_android_gui.png) -->
 
-<img src="./docs/pics/Qt_gui.png" width="300" alt="Qt_gui" />
-<img src="./docs/pics/Qt_android_gui.png" width="300" alt="Qt_android_gui" />
+<img src="./docs/pics/Qt_gui.png" height="300" alt="Qt_gui" />
+<img src="./docs/pics/Qt_android_gui.png" height="300" alt="Qt_android_gui" />
+<img src="./docs/pics/wpf_gui.png" height="300" alt="wpf_gui" />
 
 ## TODO
 
