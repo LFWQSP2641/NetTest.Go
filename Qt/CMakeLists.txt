@@ -54,7 +54,7 @@ set_target_properties(appNetTest PROPERTIES
     QT_ANDROID_VERSION_NAME ${CMAKE_PROJECT_VERSION}
     QT_ANDROID_VERSION_CODE 1
     QT_ANDROID_PACKAGE_NAME "com.LFWQSP2641.appNetTestGo"
-    QT_ANDROID_EXTRA_LIBS ${CMAKE_SOURCE_DIR}/lib/libandroidnetcore_${CMAKE_ANDROID_ARCH_ABI}.so
+    QT_ANDROID_EXTRA_LIBS ${CMAKE_SOURCE_DIR}/../lib/libandroidnetcore_${CMAKE_ANDROID_ARCH_ABI}.so
 )
 
 target_link_libraries(appNetTest
@@ -64,7 +64,7 @@ target_link_libraries(appNetTest
 if(NOT ANDROID)
     add_custom_command(TARGET appNetTest POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_SOURCE_DIR}/lib/netcore.$<$<PLATFORM_ID:Windows>:dll>$<$<PLATFORM_ID:Linux>:so>$<$<PLATFORM_ID:Darwin>:dylib>
+            ${CMAKE_SOURCE_DIR}/../lib/netcore.$<$<PLATFORM_ID:Windows>:dll>$<$<PLATFORM_ID:Linux>:so>$<$<PLATFORM_ID:Darwin>:dylib>
             $<TARGET_FILE_DIR:appNetTest>
         COMMENT "Copying Go dynamic library..."
     )

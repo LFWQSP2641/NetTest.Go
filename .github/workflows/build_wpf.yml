@@ -1,0 +1,71 @@
+name: Compile wpf project
+
+on: push
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        self_contained: [true, false]
+
+    env:
+      OUTPUT_BASE: ${{ github.workspace }}/cs/output
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v5
+
+    - name: Set Package Name
+      shell: bash
+      run: |
+        package_name="NetTest-wpf-windows"
+        if [ '${{ matrix.self_contained }}' = 'true' ]; then
+          package_name="${package_name}-selfcontained"
+        fi
+        echo "PACKAGE_NAME=${package_name}" >> $GITHUB_ENV
+
+    - name: Setup
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Install Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.25'
+      
+    - name: Build Go libraries
+      shell: bash
+      run: |
+        chmod +x ./build_go.sh
+        ./build_go.sh
+
+    - name: Build
+      run: |
+        cd cs
+        dotnet publish ./wpf/wpf.csproj -c Release -r win-x64 --self-contained=${{ matrix.self_contained }} -o ${{ env.OUTPUT_BASE }}
+
+    - name: Compress
+      shell: bash
+      run: |
+        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on "${{ env.PACKAGE_NAME }}.7z" "${{ env.OUTPUT_BASE }}"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PACKAGE_NAME }}.7z
+        path: ${{ env.PACKAGE_NAME }}.7z
+        compression-level: 0
+
+    - name: Release Package
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          ${{ env.PACKAGE_NAME }}.7z
+        generate_release_notes: true
