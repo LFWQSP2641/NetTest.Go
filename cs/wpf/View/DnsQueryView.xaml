@@ -1,0 +1,171 @@
+<local:DnsQueryViewBase
+    x:Class="wpf.View.DnsQueryView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:wpf.View"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="DNS Scheme:" />
+
+        <ComboBox
+            x:Name="DnsSchemeComboBox"
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            IsEditable="True" />
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="DNS Server:" />
+        <ComboBox
+            x:Name="DnsServerComboBox"
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            IsEditable="True" />
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Domain:" />
+        <TextBox
+            x:Name="DomainTextBox"
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="0,0,0,8" />
+
+        <TextBlock
+            Grid.Row="3"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Record Type:" />
+        <ComboBox
+            x:Name="RecordTypeComboBox"
+            Grid.Row="3"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            IsEditable="True" />
+
+        <TextBlock
+            Grid.Row="4"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Record Class:" />
+        <ComboBox
+            x:Name="RecordClassComboBox"
+            Grid.Row="4"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            IsEditable="True" />
+
+        <TextBlock
+            Grid.Row="5"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="SNI:" />
+        <TextBox
+            x:Name="SniTextBox"
+            Grid.Row="5"
+            Grid.Column="1"
+            Margin="0,0,0,8" />
+
+        <TextBlock
+            Grid.Row="6"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Client Subnet:" />
+        <TextBox
+            x:Name="ClientSubnetTextBox"
+            Grid.Row="6"
+            Grid.Column="1"
+            Margin="0,0,0,8" />
+
+        <TextBlock
+            Grid.Row="7"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="SOCKS5 Proxy:" />
+        <TextBox
+            x:Name="ProxyTextBox"
+            Grid.Row="7"
+            Grid.Column="1"
+            Margin="0,0,0,8" />
+
+        <StackPanel
+            Grid.Row="8"
+            Grid.ColumnSpan="2"
+            Margin="0,0,0,8"
+            HorizontalAlignment="Left"
+            Orientation="Horizontal">
+            <Button
+                x:Name="QueryButton"
+                MinWidth="0"
+                Padding="8,2"
+                HorizontalAlignment="Left"
+                Content="Query" />
+            <TextBlock
+                Margin="12,0,4,0"
+                VerticalAlignment="Center"
+                Text="Busy:" />
+            <CheckBox
+                x:Name="IsBusyCheckBox"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsEnabled="False" />
+        </StackPanel>
+
+        <Border
+            Grid.Row="9"
+            Grid.ColumnSpan="2"
+            Margin="0,0,0,8"
+            Padding="8"
+            VerticalAlignment="Stretch"
+            BorderBrush="#DDD"
+            BorderThickness="1"
+            CornerRadius="4">
+            <ScrollViewer
+                x:Name="ResultScroll"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <TextBlock
+                    x:Name="ResultTextBlock"
+                    Width="{Binding ElementName=ResultScroll, Path=ViewportWidth}"
+                    TextWrapping="Wrap" />
+            </ScrollViewer>
+        </Border>
+
+        <TextBlock
+            x:Name="ErrorTextBlock"
+            Grid.Row="10"
+            Grid.ColumnSpan="2"
+            Foreground="IndianRed" />
+    </Grid>
+</local:DnsQueryViewBase>
