@@ -58,8 +58,8 @@ fi
 
 # copy
 cd ..
-mkdir -p Qt/lib
-cp Go/build/libandroidnetcore_arm64-v8a.so Qt/lib/
-cp Go/build/libandroidnetcore_armeabi-v7a.so Qt/lib/
-cp Go/build/libandroidnetcore_x86.so Qt/lib/
-cp Go/build/libandroidnetcore_x86_64.so Qt/lib/
+mkdir -p lib
+cp Go/build/libandroidnetcore_arm64-v8a.so lib/
+cp Go/build/libandroidnetcore_armeabi-v7a.so lib/
+cp Go/build/libandroidnetcore_x86.so lib/
+cp Go/build/libandroidnetcore_x86_64.so lib/

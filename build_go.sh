@@ -25,12 +25,12 @@ esac
 
 # copy
 cd ..
-mkdir -p Qt/lib
+mkdir -p lib
 case "$(uname -s)" in
     *MINGW*|*CYGWIN*|*MSYS*)
-        cp Go/build/netcore.dll Qt/lib/
+        cp Go/build/netcore.dll lib/
         ;;
     *)
-        cp Go/build/netcore.so Qt/lib/
+        cp Go/build/netcore.so lib/
         ;;
 esac
