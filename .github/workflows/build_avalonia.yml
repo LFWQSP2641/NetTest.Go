@@ -1,4 +1,4 @@
-name: Compile wpf project
+name: Compile avalonia project
 
 on: push
 
@@ -6,12 +6,21 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: windows-latest
+  build-and-publish:
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        self_contained: [true, false]
+        include:
+          - os: ubuntu-latest
+            runtime: linux-x64
+            self_contained: true
+          - os: windows-latest
+            runtime: win-x64
+            self_contained: true
+          - os: windows-latest
+            runtime: win-x64
+            self_contained: false
 
     env:
       OUTPUT_BASE: ${{ github.workspace }}/cs/output
@@ -23,7 +32,7 @@ jobs:
     - name: Set Package Name
       shell: bash
       run: |
-        package_name="NetTest-wpf-windows"
+        package_name="NetTest-AvaloniaApplication-${{ matrix.runtime }}"
         if [ '${{ matrix.self_contained }}' = 'true' ]; then
           package_name="${package_name}-selfcontained"
         fi
@@ -48,7 +57,7 @@ jobs:
     - name: Build
       run: |
         cd cs
-        dotnet publish ./wpf/wpf.csproj -c Release -r win-x64 --self-contained=${{ matrix.self_contained }} -p:EnableWindowsTargeting=true -o ${{ env.OUTPUT_BASE }}
+        dotnet publish ./AvaloniaApplication/AvaloniaApplication.csproj -c Release -r ${{ matrix.runtime }} --self-contained=${{ matrix.self_contained }} -o ${{ env.OUTPUT_BASE }}
 
     - name: Compress
       shell: bash
