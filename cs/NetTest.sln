@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaApplication", "AvaloniaApplication\AvaloniaApplication.csproj", "{1FB3915B-C434-47E0-9A50-236E9408934A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MauiProgram", "MauiProgram\MauiProgram.csproj", "{EFB5E763-4021-4CCA-A984-7ABFA8115912}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,11 @@ Global
 		{1FB3915B-C434-47E0-9A50-236E9408934A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FB3915B-C434-47E0-9A50-236E9408934A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FB3915B-C434-47E0-9A50-236E9408934A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFB5E763-4021-4CCA-A984-7ABFA8115912}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFB5E763-4021-4CCA-A984-7ABFA8115912}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFB5E763-4021-4CCA-A984-7ABFA8115912}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{EFB5E763-4021-4CCA-A984-7ABFA8115912}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFB5E763-4021-4CCA-A984-7ABFA8115912}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
