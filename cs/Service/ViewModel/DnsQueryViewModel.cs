@@ -16,19 +16,19 @@ namespace Service.ViewModel;
 public partial class DnsQueryViewModel : ReactiveObject, IDisposable
 {
     [Reactive]
-    private string _dnsServerScheme = "udp://";
+    private string _dnsServerScheme = Global.DnsSchemes.First();
 
     [Reactive]
-    private string _dnsServer = "223.5.5.5";
+    private string _dnsServer = Global.CommonDnsServers.First();
 
     [Reactive]
     private string _domain = "www.baidu.com";
 
     [Reactive]
-    private string _recordType = "A";
+    private string _recordType = Global.DnsRecordType.First();
 
     [Reactive]
-    private string _recordClass = "IN";
+    private string _recordClass = Global.DnsRecordClass.First();
 
     [Reactive]
     private string? _sni;

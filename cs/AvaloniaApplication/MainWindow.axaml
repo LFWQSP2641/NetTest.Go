@@ -1,0 +1,15 @@
+<Window
+    x:Class="AvaloniaApplication.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:view="clr-namespace:AvaloniaApplication.View"
+    Title="AvaloniaApplication"
+    d:DesignHeight="640"
+    d:DesignWidth="480"
+    mc:Ignorable="d">
+    <Grid>
+        <view:DnsQueryView />
+    </Grid>
+</Window>

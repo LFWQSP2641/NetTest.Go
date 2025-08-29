@@ -1,0 +1,164 @@
+<UserControl
+    x:Class="AvaloniaApplication.View.DnsQueryView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
+
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="DNS Scheme:" />
+        <ComboBox
+            x:Name="DnsSchemeComboBox"
+            Grid.Row="0"
+            Grid.Column="1"
+            Margin="0,0,0,8" />
+
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="DNS Server:" />
+        <AutoCompleteBox
+            x:Name="DnsServerComboBox"
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            IsTextCompletionEnabled="True" />
+
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Domain:" />
+        <TextBox
+            x:Name="DomainTextBox"
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            Watermark="Enter domain" />
+
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Record Type:" />
+        <AutoCompleteBox
+            x:Name="RecordTypeComboBox"
+            Grid.Row="3"
+            Grid.Column="1"
+            Margin="0,0,0,8" />
+
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Record Class:" />
+        <AutoCompleteBox
+            x:Name="RecordClassComboBox"
+            Grid.Row="4"
+            Grid.Column="1"
+            Margin="0,0,0,8" />
+
+        <TextBlock
+            Grid.Row="5"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="SNI:" />
+        <TextBox
+            x:Name="SniTextBox"
+            Grid.Row="5"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            Watermark="Enter SNI" />
+
+        <TextBlock
+            Grid.Row="6"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="Client Subnet:" />
+        <TextBox
+            x:Name="ClientSubnetTextBox"
+            Grid.Row="6"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            Watermark="Enter Client Subnet" />
+
+        <TextBlock
+            Grid.Row="7"
+            Grid.Column="0"
+            Margin="0,0,8,8"
+            VerticalAlignment="Center"
+            Text="SOCKS5 Proxy:" />
+        <TextBox
+            x:Name="ProxyTextBox"
+            Grid.Row="7"
+            Grid.Column="1"
+            Margin="0,0,0,8"
+            Watermark="Enter SOCKS5 Proxy" />
+
+        <StackPanel
+            Grid.Row="8"
+            Grid.ColumnSpan="2"
+            Margin="0,8,0,0"
+            Orientation="Horizontal">
+            <Button
+                x:Name="QueryButton"
+                Width="100"
+                Margin="0,0,8,0"
+                Content="Query" />
+            <TextBlock
+                Margin="12,0,4,0"
+                VerticalAlignment="Center"
+                Text="Busy:" />
+            <CheckBox
+                x:Name="IsBusyCheckBox"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                IsEnabled="False" />
+        </StackPanel>
+
+        <Border
+            Grid.Row="9"
+            Grid.ColumnSpan="2"
+            Margin="0,0,0,8"
+            Padding="8"
+            VerticalAlignment="Stretch"
+            BorderBrush="#DDD"
+            BorderThickness="1"
+            CornerRadius="4">
+            <ScrollViewer
+                x:Name="ResultScroll"
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto">
+                <TextBlock
+                    x:Name="ResultTextBlock"
+                    HorizontalAlignment="Stretch"
+                    TextWrapping="Wrap" />
+            </ScrollViewer>
+        </Border>
+
+        <TextBlock
+            x:Name="ErrorTextBlock"
+            Grid.Row="10"
+            Grid.ColumnSpan="2"
+            Foreground="IndianRed" />
+
+    </Grid>
+
+
+</UserControl>
