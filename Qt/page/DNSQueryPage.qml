@@ -2,18 +2,36 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import NetTest
+import QtQuick.Controls.Material
 
 Item {
+    // 用于按项存储并展示查询结果
+    ListModel {
+        id: resultsModel
+    }
+
     DnsQuery {
         id: dnsQuery
         onBusyChanged: {
             queryButton.enabled = !dnsQuery.busy;
         }
         onQueryFailed: function(hostname, error) {
-            resultTextArea.log(qsTr("Query failed:") + "\n" + error);
+            resultsModel.append({
+                                   time: Qt.formatDateTime(new Date(), "hh:mm:ss.zzz"),
+                                   title: qsTr("Query failed:"),
+                                   body: error,
+                                   isError: true
+                               });
+            resultsList.scrollToBottom();
         }
         onQueryFinished: function(hostname, result) {
-            resultTextArea.log(qsTr("Query finished:") + "\n" + result);
+            resultsModel.append({
+                                   time: Qt.formatDateTime(new Date(), "hh:mm:ss.zzz"),
+                                   title: qsTr("Query finished:"),
+                                   body: result,
+                                   isError: false
+                               });
+            resultsList.scrollToBottom();
         }
     }
 
@@ -152,31 +170,64 @@ Item {
             }
         }
 
-        Flickable {
-            id: flickable
+        Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
             clip: true
-            contentHeight: resultTextArea.height
-            TextArea {
-                id: resultTextArea
-                width: parent.width
-                placeholderText: qsTr("received message and debug log")
-                readOnly: true
-                wrapMode: TextEdit.Wrap
 
-                function clear() {
-                    resultTextArea.text = ""
+            // 占位文本（无结果时）
+            Text {
+                anchors.centerIn: parent
+                visible: resultsModel.count === 0
+                text: qsTr("received message and debug log")
+                color: "#808080"
+                wrapMode: Text.Wrap
+                width: parent.width * 0.9
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            ListView {
+                id: resultsList
+                anchors.fill: parent
+                model: resultsModel
+                clip: true
+                spacing: 8
+
+                delegate: Rectangle {
+                    width: resultsList.width
+                    radius: 4
+                    // 交替背景色（条纹效果）
+                    color: (index % 2 === 0) ? Material.background.lighter(1.05) : Material.background.darker(1.05)
+                    border.width: 1
+                    border.color: "transparent"
+
+                    property int pad: 8
+                    height: contentCol.implicitHeight + pad * 2
+
+                    Column {
+                        id: contentCol
+                        anchors.fill: parent
+                        anchors.margins: parent.pad
+                        spacing: 4
+
+                        Text {
+                            text: time + " " + title
+                            font.bold: true
+                            color: isError ? "red" : Material.accent
+                            wrapMode: Text.Wrap
+                        }
+                        Text {
+                            text: body
+                            color: isError ? "red" : Material.foreground
+                            wrapMode: Text.Wrap
+                        }
+                    }
                 }
 
-                function log(text) {
-                    resultTextArea.output(Qt.formatDateTime(new Date(), "hh:mm:ss.zzz") + " " + text)
-                }
-
-                function output(text) {
-                    resultTextArea.append(text)
-                    let contentY = flickable.contentHeight - flickable.height
-                    flickable.contentY = contentY > 0 ? contentY : 0
+                function scrollToBottom() {
+                    if (resultsModel.count > 0) {
+                        resultsList.positionViewAtEnd();
+                    }
                 }
             }
         }

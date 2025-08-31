@@ -18,7 +18,7 @@ class DnsQueryModel extends ChangeNotifier {
   // 可绑定的 UI 状态
   bool _loading = false;
   String? _error;
-  String? _result;
+  final List<String> _results = [];
 
   // 读字段
   String get dnsServer => _entity.dnsServer;
@@ -32,7 +32,7 @@ class DnsQueryModel extends ChangeNotifier {
 
   bool get loading => _loading;
   String? get error => _error;
-  String? get result => _result;
+  List<String> get results => List.unmodifiable(_results);
 
   // 写字段（统一通过 copyWith 更新实体）
   set dnsServer(String v) { _entity = _entity.copyWith(dnsServer: v); notifyListeners(); }
@@ -58,9 +58,7 @@ class DnsQueryModel extends ChangeNotifier {
         proxy: _entity.proxy,
       );
       if (r != null && r.isNotEmpty) {
-        _result = (_result == null || _result!.isEmpty)
-            ? r
-            : (_result! + "\n" + r);
+        _results.add(r);
       }
     } catch (e) {
       _error = e.toString();

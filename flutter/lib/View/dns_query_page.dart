@@ -31,9 +31,7 @@ class _DnsQueryPageState extends State<DnsQueryPage> {
       });
     }
 
-    final String content = vm.error ?? (vm.result ?? 'No result');
-    final TextStyle? contentStyle =
-        vm.error != null ? const TextStyle(color: Colors.red) : null;
+  final hasData = vm.results.isNotEmpty || vm.error != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('DNS Query')),
@@ -91,21 +89,27 @@ class _DnsQueryPageState extends State<DnsQueryPage> {
                 ),
               ],
             ),
-            _RowField(
-              label: 'SNI',
-              initial: vm.sni,
-              onChanged: (v) => vm.sni = v,
-            ),
-            _RowField(
-              label: 'Client Subnet',
-              initial: vm.clientSubnet,
-              onChanged: (v) => vm.clientSubnet = v,
-            ),
-            _RowField(
-              label: 'SOCKS5',
-              hint: 'socks5://host:port',
-              initial: vm.proxy ?? '',
-              onChanged: (v) => vm.proxy = v.isEmpty ? null : v,
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('Advanced Options'),
+              children: [
+                _RowField(
+                  label: 'SOCKS5',
+                  hint: 'socks5://host:port',
+                  initial: vm.proxy ?? '',
+                  onChanged: (v) => vm.proxy = v.isEmpty ? null : v,
+                ),
+                _RowField(
+                  label: 'SNI',
+                  initial: vm.sni,
+                  onChanged: (v) => vm.sni = v,
+                ),
+                _RowField(
+                  label: 'Client Subnet',
+                  initial: vm.clientSubnet,
+                  onChanged: (v) => vm.clientSubnet = v,
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Row(
@@ -132,13 +136,29 @@ class _DnsQueryPageState extends State<DnsQueryPage> {
                   border: Border.all(color: Theme.of(context).dividerColor),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: SelectableText(
-                    content,
-                    style: contentStyle,
-                  ),
-                ),
+                child: hasData
+                    ? ListView.separated(
+                        controller: _scrollController,
+                        itemCount: vm.results.length + (vm.error != null ? 1 : 0),
+                        separatorBuilder: (_, __) => const Divider(height: 16),
+                        itemBuilder: (context, index) {
+                          final theme = Theme.of(context);
+                          // 最后一项如果有错误则显示错误
+                          final bool showError = vm.error != null && index == vm.results.length;
+                          if (showError) {
+                            return SelectableText(
+                              vm.error!,
+                              style: const TextStyle(color: Colors.red),
+                            );
+                          }
+                          final item = vm.results[index];
+                          return Container(
+                            color: index % 2 == 0 ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.surface,
+                            child: SelectableText(item),
+                          );
+                        },
+                      )
+                    : const Center(child: Text('No result')),
               ),
             ),
           ],
