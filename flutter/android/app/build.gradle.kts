@@ -86,9 +86,6 @@ val syncJniLibs by tasks.registering {
             if (src.exists()) {
                 val dstDir = project.file("src/main/jniLibs/$abi")
                 dstDir.mkdirs()
-                val dst = dstDir.resolve(soName)
-                src.copyTo(dst, overwrite = true)
-                // Also provide a canonical name for loading as "libnetcore.so" or System.loadLibrary("netcore")
                 val alias = dstDir.resolve("libnetcore.so")
                 src.copyTo(alias, overwrite = true)
             }

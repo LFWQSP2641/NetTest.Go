@@ -1,0 +1,173 @@
+name: Compile Flutter project
+
+on: push
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: '3.35.2'
+  GO_VERSION: '1.25'
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          log-accepted-android-sdk-licenses: false
+          cmdline-tools-version: '12266719'
+          packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build Go (Android)
+        run: |
+          python scripts/build_android_go.py
+          python scripts/sync_jni_libs.py
+
+      - name: Restore key.properties
+        run: |
+          printf "%s" "${{ secrets.KEY_PROPERTIES }}" > flutter/android/key.properties
+
+      - name: Restore android_release.keystore
+        run: |
+          echo "${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}" | base64 -d > flutter/android/app/android_release.keystore
+
+      - name: Build Flutter APK
+        run: |
+          cd flutter
+          flutter pub get
+          flutter build apk --release --split-per-abi
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-${{ github.ref_name }}-${{ github.run_number }}
+          path: flutter/build/app/outputs/flutter-apk/*.apk
+
+      - name: Release Package
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: flutter/build/app/outputs/flutter-apk/*.apk
+          generate_release_notes: true
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Linux desktop deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build Go (desktop)
+        run: |
+          python scripts/build_go.py
+
+      - name: Build Flutter (Linux)
+        run: |
+          cd flutter
+          flutter config --enable-linux-desktop
+          flutter doctor -v
+          flutter pub get
+          flutter build linux --release
+
+      - name: Compress
+        shell: bash
+        run: |
+          7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_Flutter_Linux.7z flutter/build/linux/x64/release/bundle
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetTest_Flutter_Linux.7z
+          path: NetTest_Flutter_Linux.7z
+          compression-level: 0
+
+      - name: Release Package
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NetTest_Flutter_Linux.7z
+          generate_release_notes: true
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build Go (desktop)
+        shell: pwsh
+        run: |
+          python scripts/build_go.py
+
+      - name: Build Flutter (Windows)
+        shell: pwsh
+        run: |
+          cd flutter
+          flutter config --enable-windows-desktop
+          flutter doctor -v
+          flutter pub get
+          flutter build windows --release
+
+      - name: Compress
+        shell: pwsh
+        run: |
+          7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_Flutter_Windows.7z flutter/build/windows/x64/runner/Release
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NetTest_Flutter_Windows.7z
+          path: NetTest_Flutter_Windows.7z
+          compression-level: 0
+
+      - name: Release Package
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NetTest_Flutter_Windows.7z
+          generate_release_notes: true

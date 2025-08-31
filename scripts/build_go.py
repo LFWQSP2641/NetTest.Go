@@ -38,7 +38,10 @@ def main(argv: list[str]) -> int:
     if len(argv) >= 2 and argv[1].lower() == "debug":
         mode = "debug"
 
-    root = Path(__file__).resolve().parent
+    # Base paths on the current working directory so scripts can be invoked from repo root as
+    #   python scripts/build_go.py
+    # regardless of the script file location.
+    root = Path.cwd()
     go_dir = root / "Go"
     build_dir = go_dir / "build"
     lib_dir = root / "lib"
