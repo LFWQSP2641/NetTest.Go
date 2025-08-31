@@ -5,6 +5,11 @@ using Service;
 using Service.ViewModel;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Collections.Specialized;
+using Avalonia.Controls;
+using Avalonia.Controls.Templates;
+using Avalonia.Media;
+using Avalonia;
 
 namespace AvaloniaApplication.View;
 
@@ -52,18 +57,59 @@ public partial class DnsQueryView : ReactiveUserControl<DnsQueryViewModel>
             this.OneWayBind(ViewModel, vm => vm.IsBusy, v => v.IsBusyCheckBox.IsChecked)
                 .DisposeWith(disposables);
 
-            // 结果与错误显示
-            this.OneWayBind(ViewModel, vm => vm.ResultLog, v => v.ResultTextBlock.Text)
-                .DisposeWith(disposables);
+            // 错误显示
             this.OneWayBind(ViewModel, vm => vm.Error, v => v.ErrorTextBlock.Text)
                 .DisposeWith(disposables);
 
-            // 结果变化时自动滚到底
-            this.WhenAnyValue(v => v.ViewModel!.ResultLog)
-                .WhereNotNull()
-                .Throttle(TimeSpan.FromMilliseconds(10))
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => ResultScroll?.ScrollToEnd())
+            // 按项展示：设置 ItemsSource 与模板（代码中构建），并监听集合变更滚动到底部
+            var entries = ViewModel!.Entries;
+            ResultList.ItemsSource = entries;
+
+            ResultList.ItemTemplate = new FuncDataTemplate<Service.ViewModel.DnsQueryViewModel.LogEntry>((item, ns) =>
+            {
+                var border = new Border
+                {
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(8),
+                    Margin = new Thickness(0, 0, 0, 8)
+                };
+
+                var header = new TextBlock { FontWeight = Avalonia.Media.FontWeight.Bold };
+                header.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding("Header"));
+
+                var body = new TextBlock { TextWrapping = TextWrapping.Wrap };
+                body.Bind(TextBlock.TextProperty, new Avalonia.Data.Binding("Body"));
+
+                // 错误项红色（在 DataContext 变化后根据 IsError 设置颜色）
+                border.AttachedToVisualTree += (_, __) =>
+                {
+                    if (border.DataContext is Service.ViewModel.DnsQueryViewModel.LogEntry le)
+                    {
+                        if (le.IsError)
+                        {
+                            header.Foreground = Brushes.IndianRed;
+                            body.Foreground = Brushes.IndianRed;
+                        }
+                        else
+                        {
+                            // 使用默认前景（跟随主题），因此清除前景值
+                            header.ClearValue(TextBlock.ForegroundProperty);
+                            body.ClearValue(TextBlock.ForegroundProperty);
+                        }
+                    }
+                };
+
+                var stack = new StackPanel { Spacing = 4 };
+                stack.Children.Add(header);
+                stack.Children.Add(body);
+                border.Child = stack;
+
+                return border;
+            }, true);
+
+            NotifyCollectionChangedEventHandler handler = (s, e) => ResultScroll?.ScrollToEnd();
+            entries.CollectionChanged += handler;
+            Disposable.Create(() => entries.CollectionChanged -= handler)
                 .DisposeWith(disposables);
         });
     }

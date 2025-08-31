@@ -155,10 +155,7 @@
                 x:Name="ResultScroll"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <TextBlock
-                    x:Name="ResultTextBlock"
-                    Width="{Binding ElementName=ResultScroll, Path=ViewportWidth}"
-                    TextWrapping="Wrap" />
+                <ItemsControl x:Name="ResultItems" HorizontalAlignment="Stretch" />
             </ScrollViewer>
         </Border>
 

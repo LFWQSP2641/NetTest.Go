@@ -10,6 +10,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Collections.ObjectModel;
 
 namespace Service.ViewModel;
 
@@ -55,6 +56,18 @@ public partial class DnsQueryViewModel : ReactiveObject, IDisposable
     [Reactive]
     private string? _resultLog;
 
+    // 按项展示的结果集合
+    public ObservableCollection<LogEntry> Entries { get; } = new();
+
+    public sealed class LogEntry
+    {
+        public required string Time { get; init; }
+        public required string Title { get; init; }
+        public required string Body { get; init; }
+        public bool IsError { get; init; }
+        public string Header => Time + " " + Title;
+    }
+
     public ReactiveCommand<Unit, string?> QueryCommand { get; }
 
     private readonly DnsQuery _dns = new();
@@ -99,13 +112,31 @@ public partial class DnsQueryViewModel : ReactiveObject, IDisposable
                 ResultLog = string.IsNullOrEmpty(ResultLog)
                     ? text
                     : ResultLog + Environment.NewLine + text;
+
+                Entries.Add(new LogEntry
+                {
+                    Time = DateTime.Now.ToString("HH:mm:ss.fff"),
+                    Title = "Query finished:",
+                    Body = text,
+                    IsError = false
+                });
             })
             .DisposeWith(_disposables);
 
         // 统一处理异常
         QueryCommand.ThrownExceptions
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(ex => Error = ex.Message)
+            .Subscribe(ex =>
+            {
+                Error = ex.Message;
+                Entries.Add(new LogEntry
+                {
+                    Time = DateTime.Now.ToString("HH:mm:ss.fff"),
+                    Title = "Query failed:",
+                    Body = ex.Message,
+                    IsError = true
+                });
+            })
             .DisposeWith(_disposables);
 
     }

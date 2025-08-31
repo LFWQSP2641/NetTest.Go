@@ -145,10 +145,10 @@
                 x:Name="ResultScroll"
                 HorizontalScrollBarVisibility="Disabled"
                 VerticalScrollBarVisibility="Auto">
-                <TextBlock
-                    x:Name="ResultTextBlock"
-                    HorizontalAlignment="Stretch"
-                    TextWrapping="Wrap" />
+                <ListBox
+                    x:Name="ResultList"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
             </ScrollViewer>
         </Border>
 
