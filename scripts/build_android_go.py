@@ -56,7 +56,8 @@ def main(argv: list[str]) -> int:
     ndk = find_ndk()
     htag = host_tag()
 
-    root = Path(__file__).resolve().parent
+    # Base on current working directory so it works when invoked as `python scripts/build_android_go.py`
+    root = Path.cwd()
     go_dir = root / "Go"
     build_dir = go_dir / "build"
     lib_dir = root / "lib"

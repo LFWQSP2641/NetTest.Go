@@ -18,7 +18,9 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+# Resolve repository root from current working directory so script can be invoked from repo root
+# as `python scripts/sync_jni_libs.py` irrespective of script file location.
+ROOT = Path.cwd()
 LIB = ROOT / "lib"
 APP = ROOT / "flutter" / "android" / "app"
 
@@ -41,11 +43,10 @@ def sync() -> int:
             continue
         dst_dir = APP / "src" / "main" / "jniLibs" / abi
         dst_dir.mkdir(parents=True, exist_ok=True)
-        dst = dst_dir / name
-        print(f"copy {src} -> {dst}")
-        shutil.copy2(src, dst)
-    alias = dst_dir / "libnetcore.so"
-    shutil.copy2(src, alias)
+        # Only write alias libnetcore.so for this ABI (do not copy libandroidnetcore_*.so)
+        alias = dst_dir / "libnetcore.so"
+        print(f"alias {src} -> {alias}")
+        shutil.copy2(src, alias)
     return 0
 
 
