@@ -2,11 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:nettest/ViewModel/dns_query_model.dart';
 
-class DnsQueryPage extends StatelessWidget {
+class DnsQueryPage extends StatefulWidget {
   const DnsQueryPage({super.key});
+
+  @override
+  State<DnsQueryPage> createState() => _DnsQueryPageState();
+}
+
+class _DnsQueryPageState extends State<DnsQueryPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<DnsQueryModel>();
+
+    // 当结果更新且不在加载时，下一帧将滚动到底部
+    if (!vm.loading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(_scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+        }
+      });
+    }
+
+    final String content = vm.error ?? (vm.result ?? 'No result');
+    final TextStyle? contentStyle =
+        vm.error != null ? const TextStyle(color: Colors.red) : null;
+
     return Scaffold(
       appBar: AppBar(title: const Text('DNS Query')),
       body: Padding(
@@ -88,7 +116,11 @@ class DnsQueryPage extends StatelessWidget {
                   label: const Text('Query'),
                 ),
                 const SizedBox(width: 12),
-                if (vm.loading) const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                if (vm.loading)
+                  const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
               ],
             ),
             const Divider(height: 24),
@@ -100,9 +132,13 @@ class DnsQueryPage extends StatelessWidget {
                   border: Border.all(color: Theme.of(context).dividerColor),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: vm.error != null
-                    ? Text(vm.error!, style: const TextStyle(color: Colors.red))
-                    : SelectableText(vm.result ?? 'No result'),
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: SelectableText(
+                    content,
+                    style: contentStyle,
+                  ),
+                ),
               ),
             ),
           ],

@@ -1,4 +1,15 @@
-gradle-wrapper.jar
+# Android app local signing files
+key.properties
+**/*.keystore
+**/*.jks
+**/*.keystore.properties
+
+# Local NDK/caches
+.cxx/
+local.properties
+
+# Don't commit packaged native libs, they are synced at build time
+app/src/main/jniLibs/gradle-wrapper.jar
 /.gradle
 /captures/
 /gradlew
