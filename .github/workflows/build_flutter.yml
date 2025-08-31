@@ -58,17 +58,37 @@ jobs:
           flutter pub get
           flutter build apk --release --split-per-abi
 
+      - name: Rename Flutter APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUTDIR="flutter/build/app/outputs/flutter-apk"
+          declare -A MAP
+          MAP["arm64-v8a"]="arm64_v8a"
+          MAP["armeabi-v7a"]="armeabi_v7a"
+          MAP["x86_64"]="x86_64"
+          for ABI in "${!MAP[@]}"; do
+            SRC="$OUTDIR/app-${ABI}-release.apk"
+            if [ -f "$SRC" ]; then
+              DEST="$OUTDIR/NetTest_Flutter_android_${MAP[$ABI]}.apk"
+              cp "$SRC" "$DEST"
+              echo "Renamed: $SRC -> $DEST"
+            else
+              echo "Skip missing: $SRC"
+            fi
+          done
+
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: apk-${{ github.ref_name }}-${{ github.run_number }}
-          path: flutter/build/app/outputs/flutter-apk/*.apk
+          path: flutter/build/app/outputs/flutter-apk/NetTest_Flutter_android_*.apk
 
       - name: Release Package
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: flutter/build/app/outputs/flutter-apk/*.apk
+          files: flutter/build/app/outputs/flutter-apk/NetTest_Flutter_android_*.apk
           generate_release_notes: true
 
   build-linux:

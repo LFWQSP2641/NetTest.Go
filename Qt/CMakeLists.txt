@@ -61,7 +61,8 @@ target_link_libraries(appNetTest
     PRIVATE Qt6::Core Qt6::Quick Qt6::QuickControls2
 )
 
-if(NOT ANDROID)
+# Copy Go dynamic library for non-Android builds
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android")
     add_custom_command(TARGET appNetTest POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
             ${CMAKE_SOURCE_DIR}/../lib/netcore.$<$<PLATFORM_ID:Windows>:dll>$<$<PLATFORM_ID:Linux>:so>$<$<PLATFORM_ID:Darwin>:dylib>
