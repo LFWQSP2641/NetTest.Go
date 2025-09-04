@@ -44,7 +44,7 @@ jobs:
         arch: ${{ matrix.arch }}
 
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v6
       with:
         go-version: ${{ env.GO_VERSION }}
 
@@ -205,7 +205,7 @@ jobs:
         tree /home/runner/work/NetTest.Go/Qt
 
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v6
       with:
         go-version: ${{ env.GO_VERSION }}
 
