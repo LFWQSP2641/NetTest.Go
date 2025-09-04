@@ -159,10 +159,10 @@ Item {
             text: qsTr("Query DNS")
             onClicked: {
                 queryButton.enabled = false;
-                dnsQuery.server = netTypeComboBox.currentText + serverComboBox.currentText;
+                dnsQuery.server = netTypeComboBox.currentText + serverComboBox.editText;
                 dnsQuery.domain = domainTextField.text;
-                dnsQuery.type = typeComboBox.currentText;
-                dnsQuery.classType = classComboBox.currentText;
+                dnsQuery.type = typeComboBox.editText;
+                dnsQuery.classType = classComboBox.editText;
                 dnsQuery.socks5Server = proxyTextField.text;
                 dnsQuery.sni = sniTextField.text;
                 dnsQuery.clientSubnet = clientSubnetTextField.text;
@@ -197,7 +197,7 @@ Item {
                     width: resultsList.width
                     radius: 4
                     // 交替背景色（条纹效果）
-                    color: (index % 2 === 0) ? Material.background.lighter(1.05) : Material.background.darker(1.05)
+                    color: (index % 2 === 0) ? Material.background.darker(1.05) : Material.background.lighter(1.05)
                     border.width: 1
                     border.color: "transparent"
 
