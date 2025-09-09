@@ -7,7 +7,7 @@ permissions:
 
 env:
   FLUTTER_VERSION: '3.35.2'
-  GO_VERSION: '1.25'
+  GO_VERSION: '1.25.1'
 
 jobs:
   build-android:
