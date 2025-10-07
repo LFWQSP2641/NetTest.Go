@@ -1,13 +1,11 @@
-using Service.ViewModel;
 using ReactiveUI;
-using System;
-using System.Reactive.Linq;
+using Service;
+using Service.ViewModel;
+using System.Collections.Specialized;
 using System.Reactive.Disposables;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using Service;
-using System.Collections.Specialized;
-using System.Windows;
 using System.Windows.Media;
 
 namespace wpf.View;

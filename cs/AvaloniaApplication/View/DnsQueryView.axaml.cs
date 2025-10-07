@@ -26,10 +26,6 @@ public partial class DnsQueryView : ReactiveUserControl<DnsQueryViewModel>
         RecordTypeComboBox.ItemsSource = Global.DnsRecordType;
         RecordClassComboBox.ItemsSource = Global.DnsRecordClass;
 
-        DnsServerComboBox.Text = ViewModel.DnsServer;
-        RecordTypeComboBox.Text = ViewModel.RecordType;
-        RecordClassComboBox.Text = ViewModel.RecordClass;
-
         this.WhenActivated(disposables =>
         {
             this.Bind(ViewModel, vm => vm.DnsServerScheme, v => v.DnsSchemeComboBox.SelectedValue)

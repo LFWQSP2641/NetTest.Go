@@ -1,20 +1,13 @@
 ﻿using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using Service.dns;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
 using System.Collections.ObjectModel;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace Service.ViewModel;
 
-public partial class DnsQueryViewModel : ReactiveObject, IDisposable
+public partial class DnsQueryViewModel : ReactiveObject
 {
     [Reactive]
     private string _dnsServerScheme = Global.DnsSchemes.First();
@@ -71,7 +64,6 @@ public partial class DnsQueryViewModel : ReactiveObject, IDisposable
     public ReactiveCommand<Unit, string?> QueryCommand { get; }
 
     private readonly DnsQuery _dns = new();
-    private readonly CompositeDisposable _disposables = new();
 
     public DnsQueryViewModel()
     {
@@ -86,21 +78,18 @@ public partial class DnsQueryViewModel : ReactiveObject, IDisposable
 
         _canQueryHelper = canQuery
             .ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, vm => vm.CanQuery)
-            .DisposeWith(_disposables);
+            .ToProperty(this, vm => vm.CanQuery);
 
         // 异步命令：集中并发、忙碌状态与异常处理
         QueryCommand = ReactiveCommand.CreateFromTask<string?>(ExecuteQueryAsync, canQuery);
         _isBusyHelper = QueryCommand.IsExecuting
             .ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, vm => vm.IsBusy)
-            .DisposeWith(_disposables);
+            .ToProperty(this, vm => vm.IsBusy);
 
         // 将命令输出投递为只读属性 Result
         _resultHelper = QueryCommand
             .ObserveOn(RxApp.MainThreadScheduler)
-            .ToProperty(this, vm => vm.Result)
-            .DisposeWith(_disposables);
+            .ToProperty(this, vm => vm.Result);
 
         // 将每次查询结果追加到 ResultLog
         QueryCommand
@@ -120,8 +109,7 @@ public partial class DnsQueryViewModel : ReactiveObject, IDisposable
                     Body = text,
                     IsError = false
                 });
-            })
-            .DisposeWith(_disposables);
+            });
 
         // 统一处理异常
         QueryCommand.ThrownExceptions
@@ -136,8 +124,7 @@ public partial class DnsQueryViewModel : ReactiveObject, IDisposable
                     Body = ex.Message,
                     IsError = true
                 });
-            })
-            .DisposeWith(_disposables);
+            });
 
     }
 
@@ -162,6 +149,4 @@ public partial class DnsQueryViewModel : ReactiveObject, IDisposable
         if (ct.IsCancellationRequested) return null;
         return result;
     }
-
-    public void Dispose() => _disposables.Dispose();
 }
