@@ -141,12 +141,23 @@ def main(argv: list[str]) -> int:
             # Ensure we target ARMv7 for armeabi-v7a
             env["GOARM"] = "7"
 
+        # Enable 16KB page size support for Android 15+
+        # max-page-size: Set maximum page size to ensure loading on 16KB page systems
+        # common-page-size: Set common page size to optimize memory layout and performance
+        page_size_flags = "-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
+
         # Prefer an available wrapper closest to desired API, otherwise try unsuffixed wrapper, else generic clang
         desired_api_int = int(api)
         wrapper = find_best_wrapper(triple, desired_api_int, min_api)
         if wrapper is not None:
             env["CC"] = str(wrapper)
-            print(f"Using CC={env['CC']} (API from wrapper)")
+            # Apply 16KB page size flags when using wrapper
+            env["CGO_LDFLAGS"] = (
+                f"{page_size_flags} {env.get('CGO_LDFLAGS','')}".strip()
+            )
+            print(
+                f"Using CC={env['CC']} (API from wrapper) with CGO_LDFLAGS='{env['CGO_LDFLAGS']}'"
+            )
         else:
             # Try unsuffixed wrappers with possible Windows extensions
             candidates = [
@@ -157,7 +168,13 @@ def main(argv: list[str]) -> int:
             found = next((c for c in candidates if c.exists()), None)
             if found is not None:
                 env["CC"] = str(found)
-                print(f"Using CC={env['CC']} (unsuffixed wrapper)")
+                # Apply 16KB page size flags when using unsuffixed wrapper
+                env["CGO_LDFLAGS"] = (
+                    f"{page_size_flags} {env.get('CGO_LDFLAGS','')}".strip()
+                )
+                print(
+                    f"Using CC={env['CC']} (unsuffixed wrapper) with CGO_LDFLAGS='{env['CGO_LDFLAGS']}'"
+                )
             else:
                 # Fallback to generic clang and inject target/sysroot
                 generic = tool_base / (
@@ -166,7 +183,7 @@ def main(argv: list[str]) -> int:
                 env["CC"] = str(generic)
                 sysroot = ndk / "toolchains" / "llvm" / "prebuilt" / htag / "sysroot"
                 cflags = f"--target={triple}{api} --sysroot={sysroot}"
-                # 为 32/64 位添加 sysroot 库检索路径
+                # Add sysroot library search paths for 32/64 bit architectures
                 lib_triple_map = {
                     "arm": "arm-linux-androideabi",
                     "arm64": "aarch64-linux-android",
@@ -176,9 +193,6 @@ def main(argv: list[str]) -> int:
                 lib_triple = lib_triple_map[goarch]
                 lib_api_dir = sysroot / "usr" / "lib" / lib_triple / str(api)
                 usr_lib_dir = sysroot / "usr" / "lib"
-                page_size_flags = (
-                    "-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
-                )
                 ldflags_extra = f"-L{lib_api_dir} -L{usr_lib_dir} {page_size_flags}"
                 env["CGO_CFLAGS"] = f"{cflags} {env.get('CGO_CFLAGS','')}".strip()
                 env["CGO_LDFLAGS"] = (
