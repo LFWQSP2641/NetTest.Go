@@ -8,10 +8,11 @@ Window {
 
     DNSQueryPage {
         anchors {
-            left: parent.left; right: parent.right; top: parent.top
+            left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom
             topMargin: 10 + parent.SafeArea.margins.top
             leftMargin: 10 + parent.SafeArea.margins.left
             rightMargin: 10 + parent.SafeArea.margins.right
+            bottomMargin: 10 + parent.SafeArea.margins.bottom
         }
     }
 }
