@@ -7,7 +7,11 @@ Window {
     title: qsTr("DNS Query Tool")
 
     DNSQueryPage {
-        anchors.fill: parent
-        anchors.margins: 10
+        anchors {
+            left: parent.left; right: parent.right; top: parent.top
+            topMargin: 10 + parent.SafeArea.margins.top
+            leftMargin: 10 + parent.SafeArea.margins.left
+            rightMargin: 10 + parent.SafeArea.margins.right
+        }
     }
 }

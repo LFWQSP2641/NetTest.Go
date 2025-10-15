@@ -176,7 +176,10 @@ def main(argv: list[str]) -> int:
                 lib_triple = lib_triple_map[goarch]
                 lib_api_dir = sysroot / "usr" / "lib" / lib_triple / str(api)
                 usr_lib_dir = sysroot / "usr" / "lib"
-                ldflags_extra = f"-L{lib_api_dir} -L{usr_lib_dir}"
+                page_size_flags = (
+                    "-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
+                )
+                ldflags_extra = f"-L{lib_api_dir} -L{usr_lib_dir} {page_size_flags}"
                 env["CGO_CFLAGS"] = f"{cflags} {env.get('CGO_CFLAGS','')}".strip()
                 env["CGO_LDFLAGS"] = (
                     f"{cflags} {ldflags_extra} {env.get('CGO_LDFLAGS','')}".strip()

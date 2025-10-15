@@ -161,7 +161,6 @@ jobs:
           "platform-tools" \
           "platforms;android-35" \
           "build-tools;35.0.1" \
-          "ndk;26.1.10909125" \
           "ndk;27.2.12479018"
 
     - name: Select default NDK (per ABI)
