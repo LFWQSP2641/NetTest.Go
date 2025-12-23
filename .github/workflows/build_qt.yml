@@ -4,8 +4,8 @@ on: push
 
 env:
   BUILD_TYPE: Release
-  QT_VERSION: '6.10.0'
-  GO_VERSION: '1.25.4'
+  QT_VERSION: '6.10.1'
+  GO_VERSION: 'stable'
 
 permissions:
   contents: write
